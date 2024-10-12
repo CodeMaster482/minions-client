@@ -1,5 +1,3 @@
-// content.js
-
 // Функция для извлечения домена из URL
 function extractDomain(url) {
   let domain = '';
