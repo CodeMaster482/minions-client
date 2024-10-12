@@ -1,53 +1,51 @@
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//   if (message.action === "sendLinks") {
-//     // Отправляем массив ссылок на сервер
-//     console.log(JSON.stringify({ links: message.links }))
-//     fetch("https://127.0.0.1", {
-//       method: "POST",
-//       body: JSON.stringify({ links: message.links })
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//       // Получаем массивы ссылок для зелёных и красных меток
-//       let greenLinks = data.greenLinks || [];
-//       let redLinks = data.redLinks || [];
-      
-//       // Отправляем эти данные обратно в content.js для изменения стилей
-//       chrome.tabs.sendMessage(sender.tab.id, {
-//         action: "highlightLinks",
-//         greenLinks: greenLinks,
-//         redLinks: redLinks
-//       });
-//     })
-//     .catch(error => console.error("Error processing links:", error));
-//   }
-// });
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "sendLinks") {
-    let link = message.links[0];  // Берём только первую ссылку из массива
-   
-    let queryUrl = `http://127.0.0.1:8080/api/scan/url?request=${encodeURIComponent(link)}`; // Корректный синтаксис
-    console.log(queryUrl)
-    // Отправляем запрос с одной ссылкой
-    fetch(queryUrl, {
-      method: "GET"
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log("response:", data)
-      // Получаем массивы ссылок для зелёных и красных меток
-      let greenLinks = data.greenLinks || [];
-      let redLinks = data.redLinks || [];
-      
-      // Отправляем эти данные обратно в content.js для изменения стилей
-      chrome.tabs.sendMessage(sender.tab.id, {
-        action: "highlightLinks",
-        greenLinks: greenLinks,
-        redLinks: redLinks
-      });
-    })
-    .catch(error => console.error("Error processing links:", error));
+  if (message.action === "checkLink") {
+      const { linkDomain } = message;
+
+      // Функция для получения цвета для домена
+      async function fetchColor(domain) {
+          const queryUrl = `http://90.156.219.248:8080/api/scan/domain?request=${encodeURIComponent(domain)}`;
+          try {
+              const response = await fetch(queryUrl, {
+                  method: "GET",
+                  headers: {
+                      "Content-Type": "application/json",
+                  }
+              });
+
+              if (!response.ok) {
+                  console.error(`Ошибка при проверке домена ${domain}: ${response.statusText}`);
+                  sendResponse({ color: 'gray' });
+                  return;
+              }
+
+              const data = await response.json();
+
+              // API возвращает { color: "red" }, и т.д.
+              let color;
+              switch (data.color) {
+                  case "Red":
+                      color = 'red';
+                      break;
+                  case "Green":
+                      color = 'green';
+                      break;
+                  case "Gray":
+                  default:
+                      color = 'gray';
+                      break;
+              }
+
+              sendResponse({ color: color });
+          } catch (error) {
+              console.error(`Ошибка при обработке домена ${domain}:`, error);
+              sendResponse({ color: 'gray' });
+          }
+      }
+
+      fetchColor(linkDomain);
+
+      // Возвращаем true, чтобы указать, что ответ будет отправлен асинхронно
+      return true;
   }
 });
-
