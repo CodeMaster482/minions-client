@@ -45,7 +45,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       fetchColor(linkDomain);
 
-      // Возвращаем true, чтобы указать, что ответ будет отправлен асинхронно
       return true;
   }
 });
