@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       // Функция для получения цвета для домена
       async function fetchColor(domain) {
-          const queryUrl = `http://90.156.219.248:8080/api/scan/domain?request=${encodeURIComponent(domain)}`;
+          const queryUrl = `http://90.156.219.248:8080/api/scan/uri?request=${encodeURIComponent(domain)}`;
           try {
               const response = await fetch(queryUrl, {
                   method: "GET",

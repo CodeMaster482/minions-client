@@ -1,3 +1,41 @@
-html {
-    box-sizing: border-box;
+@import url("normalize.css");
+
+.nav-icon {
+    font-size: 1.5rem;
+}
+.form-container {
+    padding: 20px;
+    margin-top: 20px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    width: 300px; 
+    height: 500px;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background-color: #333;
+}
+
+li {
+    float: left;
+    flex: 1;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+/* Change the link color to #111 (black) on hover */
+li a:hover {
+    background-color: #111;
 }

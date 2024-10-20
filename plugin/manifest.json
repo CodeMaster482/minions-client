@@ -1,17 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Text Scanner Extension",
+  "name": "Falcon Safe",
   "version": "1.0",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": [
     "http://localhost/*",
     "http://90.156.219.248:8080/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; object-src 'self'"
+  },
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html", 
+    "default_popup": "popup.html",
     "default_title": "Scan Text"
   },
   "content_scripts": [
