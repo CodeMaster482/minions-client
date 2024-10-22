@@ -7,9 +7,6 @@
     "http://localhost/*",
     "http://90.156.219.248:8080/*"
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; object-src 'self'"
-  },
   "background": {
     "service_worker": "background.js"
   },
