@@ -90,7 +90,7 @@ function renderResult(data) {
             ${urlCategories ? ` <p><strong>Категория:</strong> ${urlCategories}</p>` : ""}
             <p><strong>Количество файлов:</strong> ${data.UrlGeneralInfo.FilesCount || 0}</p>`;
     }
-ы
+
     const resultTemplate = `
         ${navbar}
         <div class="container mt-4">
