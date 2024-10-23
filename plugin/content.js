@@ -3,17 +3,6 @@ const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/gi;
 function extractLinksFromText(text) {
     const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/gi;
     return text.match(urlPattern) || [];  // Returns an array of URLs or an empty array if none found
-  }
-
-const cachedLinks = new Map(JSON.parse(localStorage.getItem('cachedLinks') || '[]'));
-
-function saveToChromeStorageAPI() {
-  chrome.storage.local.set('cachedLinks', JSON.stringify([...cachedLinks]));
-}
-
-function clearCache() {
-    cachedLinks.clear(); // Clear in-memory cache
-    chrome.storage.local.remove('cachedLinks'); // Clear from chrome.storage
 }
 
 function applyLinkStyle(link, color) {
@@ -38,7 +27,7 @@ function extractDomain(url) {
     
     try {
         const urlObj = new URL(url);
-        domain = urlObj.hostname.replace(/^www\./, '');
+        domain = urlObj.hostname.replace('/^www\./', '');
     } catch (err) {
         console.error('Invalid URL:', url, err);
     }
@@ -50,6 +39,8 @@ function getCurrentPageDomain() {
     return window.location.hostname.replace(/^www\./, '');
 }
 
+
+
 function processExternalLinks() {
     const currentDomain = getCurrentPageDomain();
     const links = document.querySelectorAll('a[href]');
@@ -59,23 +50,16 @@ function processExternalLinks() {
         const linkDomain = extractDomain(href);
       
         if (linkDomain && linkDomain !== currentDomain) {
-            if (cachedLinks.has(href)) {
-                const cachedColor = cachedLinks.get(href);
-                applyLinkStyle(cachedColor);
-            } else {
-                chrome.runtime.sendMessage({
-                    action: "checkLink",
-                    href: href,
-                    linkDomain: linkDomain
-                }, response => {
-                
-                    if (response && response.color) {
-                        applyLinkStyle(link, response.color);
-                        processedLinks.set(href, response.color);
-                        saveToLocalStorage();
-                    }
-                });
-            }
+            chrome.runtime.sendMessage({
+                action: "checkLink",
+                href: href,
+                linkDomain: linkDomain
+            }, response => {
+            
+                if (response && response.color) {
+                    applyLinkStyle(link, response.color);
+                }
+            });
         }
     });
 }

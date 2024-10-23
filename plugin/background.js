@@ -1,9 +1,22 @@
+const cachedLinks = new Map(JSON.parse(chrome.storage.local.get('cachedLinks') || '[]'));
+
+function saveToChromeStorageAPI() {
+  chrome.storage.local.set('cachedLinks', JSON.stringify([...cachedLinks]));
+}
+
+function clearCache() {
+    cachedLinks.clear(); // Clear in-memory cache
+    chrome.storage.local.remove('cachedLinks'); // Clear from chrome.storage
+}
+
+
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkLink") {
-      const { linkDomain } = message;
+    const { linkDomain } = message;
 
       // Функция для получения цвета для домена
-      async function fetchColor(domain) {
+    async function fetchColor(domain) {
           const queryUrl = `http://90.156.219.248:8080/api/scan/uri?request=${encodeURIComponent(domain)}`;
           try {
               const response = await fetch(queryUrl, {
@@ -35,7 +48,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       color = 'gray';
                       break;
               }
-
+              
+              cachedLinks.set(domain, response.color);
+              saveToLocalStorage();
+              
               sendResponse({ color: color });
           } catch (error) {
               console.error(`Ошибка при обработке домена ${domain}:`, error);
@@ -43,7 +59,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
       }
 
-      fetchColor(linkDomain);
+      if (cachedLinks.has(linkDomain)) {
+        const cachedColor = cachedLinks.get(linkDomain);
+        console.log('Cache hit in: ', linkDomain, 'color', cachedColor)
+
+        sendResponse({ color: cachedColor });
+      } else {
+        fetchColor(linkDomain);
+      }
 
       return true;
   }
@@ -88,6 +111,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       break;
               }
 
+              cachedLinks.set(domain, response.color);
+              saveToLocalStorage();
+
               sendResponse({ color: color });
           } catch (error) {
               console.error(`Ошибка при обработке домена ${domain}:`, error);
@@ -95,7 +121,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
       }
 
-      fetchColor(linkDomain);
+      if (cachedLinks.has(linkDomain)) {
+        const cachedColor = cachedLinks.get(linkDomain);
+        console.log('Cache hit in: ', linkDomain, 'color', cachedColor)
+
+        sendResponse({ color: cachedColor });
+      } else {
+        fetchColor(linkDomain);
+      }
 
       // Возвращаем true, чтобы указать, что ответ будет отправлен асинхронно
       return true;
