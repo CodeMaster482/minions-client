@@ -1,7 +1,6 @@
-const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/gi;
+const urlPattern = 'https?:\/\/[^\s/$.?#].[^\s]*';
 
 function extractLinksFromText(text) {
-    const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/gi;
     return text.match(urlPattern) || [];  // Returns an array of URLs or an empty array if none found
 }
 
@@ -27,16 +26,17 @@ function extractDomain(url) {
     
     try {
         const urlObj = new URL(url);
-        domain = urlObj.hostname.replace('/^www\./', '');
+        domain = urlObj.hostname.replace('^www\.', '');
     } catch (err) {
         console.error('Invalid URL:', url, err);
+        return domain
     }
 
     return domain;
 }
 
 function getCurrentPageDomain() {
-    return window.location.hostname.replace(/^www\./, '');
+    return window.location.hostname.replace('^www\.', '');
 }
 
 
@@ -44,6 +44,11 @@ function getCurrentPageDomain() {
 function processExternalLinks() {
     const currentDomain = getCurrentPageDomain();
     const links = document.querySelectorAll('a[href]');
+
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+        console.log(href);
+    });
 
     links.forEach(link => {
         const href = link.getAttribute('href');
