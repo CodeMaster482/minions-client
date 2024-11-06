@@ -1,12 +1,17 @@
 import * as React from 'react';
-import {useDispatch} from 'react-redux'
-import Button from '@mui/material/Button';
-import SendIcon from '@mui/icons-material/Send';
+import BaseButton, { ButtonProps } from '@mui/material/Button'; // Imported as BaseButton
 
-export default function ContainedButton() {
-  const dispatch = useDispatch();
+type CustomButtonProps = ButtonProps & { label?: string };
 
+const Button = React.forwardRef<HTMLButtonElement, CustomButtonProps>(function Button(
+  { label = "Send", ...props },
+  ref,
+) {
   return (
-      <Button variant="contained" size='small' type='submit' endIcon={<SendIcon />}>Send</Button>
+    <BaseButton {...props} ref={ref}>  {/* Using BaseButton from MUI */}
+      {label}
+    </BaseButton>
   );
-}
+});
+
+export default Button;

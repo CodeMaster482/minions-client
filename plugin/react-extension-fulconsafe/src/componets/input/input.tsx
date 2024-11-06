@@ -1,24 +1,19 @@
 import * as React from 'react';
-import { Input as BaseInput } from '@mui/base/Input';
+import { Input as BaseInput , InputProps } from '@mui/base/Input';
+import TextField, { TextFieldProps } from '@mui/material/TextField'
 import { styled } from '@mui/system';
 
-type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement>;
+type CustomInputProps = TextFieldProps;
 
 const Input = React.forwardRef<HTMLDivElement, CustomInputProps>(function CustomInput(
   props,
   ref,
 ) {
-  return <BaseInput slots={{ input: InputElement }} {...props} ref={ref} />;
+  return <TextField slots={{  }} {...props} ref={ref} />;
 });
+// input: InputElement
 
-export default function UnstyledInputIntroduction() {
-  return <Input aria-label="Demo input" placeholder="Type IP, URL, domain..." />;
-}
-
-export function InputComponent() {
-    return <Input></Input>
-}
-
+export default Input;
 const blue = {
   100: '#DAECFF',
   200: '#b6daff',
@@ -41,9 +36,8 @@ const grey = {
   900: '#1C2025',
 };
 
-const InputElement = styled('input')(
-  ({ theme }) => `
-  width: 320px;
+/*
+width: 320px;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 0.875rem;
   font-weight: 400;
@@ -56,6 +50,11 @@ const InputElement = styled('input')(
   box-shadow: 0px 2px 4px ${
     theme.palette.mode === 'dark' ? 'rgba(0,0,0, 0.5)' : 'rgba(0,0,0, 0.05)'
   };
+*/
+
+const InputElement = styled('input')(
+  ({ theme }) => `
+  
 
   &:hover {
     border-color: ${blue[400]};

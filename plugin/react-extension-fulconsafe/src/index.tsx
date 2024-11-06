@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { darkTheme } from './lib/theme';
+import { darkTheme, lightTheme } from './lib/theme';
 
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -18,6 +18,8 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
+      {/* ThemeProvider makes the theme available down the React tree thanks to React context. */}
+      {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
       <App />
     </ThemeProvider>
   </React.StrictMode>

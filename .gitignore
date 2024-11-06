@@ -79,3 +79,6 @@ coverage/
 .eslintcache
 Makefile
 .env
+
+.7z
+.zip

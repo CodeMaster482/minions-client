@@ -1,13 +1,12 @@
 import React from 'react';
 import './assets/css/App.css';
-import Input from './componets/input/input';
-import ContainedButton from './componets/button/button';
+
+import MainPage from './pages/MainPage'
 
 function App() {
   return (
     <div className="App">
-      <Input></Input>
-      <ContainedButton></ContainedButton>
+      <MainPage />
     </div>
   );
 }
