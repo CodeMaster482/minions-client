@@ -12,6 +12,7 @@ struct LinkCheckView: View {
     @State private var selectedFileURL: URL?
     @State private var textColor: Color = .black
     @State private var isLoading: Bool = false
+    @State private var isLoggedIn: Bool = false // Состояние авторизации пользователя
 
     var body: some View {
         NavigationView {
@@ -116,13 +117,15 @@ struct LinkCheckView: View {
             }
             // Окно для выбора действия профиля
             .sheet(isPresented: $showProfileOptions) {
-                ProfileOptionsView()
+                ProfileOptionsView(isLoggedIn: $isLoggedIn)
             }
         }
     }
 
     private func checkLink() {
         isLoading = true // Устанавливаем состояние загрузки в true
+        textColor = .blue
+        
         guard !link.isEmpty, let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "http://90.156.219.248:8080/api/scan/uri?request=\(encodedLink)") else {
             result = "Введите корректную ссылку."
@@ -232,6 +235,7 @@ struct LinkCheckView: View {
 
     private func uploadFile(at url: URL) {
             isLoading = true  // Устанавливаем флаг загрузки
+            textColor = .blue
 
             let fileExtension = url.pathExtension.lowercased()
             if fileExtension == "png" || fileExtension == "jpg" || fileExtension == "jpeg" {
@@ -366,6 +370,8 @@ struct LinkCheckView: View {
 
     private func uploadImage(at url: URL) {
         isLoading = true
+        textColor = .blue
+        
         guard let serverURL = URL(string: "http://90.156.219.248:8080/api/scan/screen") else {
             result = "Некорректный URL сервера."
             isLoading = false  // Завершаем загрузку
