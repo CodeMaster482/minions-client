@@ -1,80 +1,97 @@
 import UIKit
 import AVFoundation
 
+protocol QRScannerDelegate: AnyObject {
+    func didScanQRCode(_ code: String)
+}
+
 class ViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
-    var video = AVCaptureVideoPreviewLayer()
-    let session = AVCaptureSession()
-    
-    // Замыкание для обработки считанного QR-кода
-    var onQRCodeScanned: ((String) -> Void)?
+    weak var delegate: QRScannerDelegate?
+
+    var captureSession: AVCaptureSession!
+    var previewLayer: AVCaptureVideoPreviewLayer!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupVideo()
-    }
-    
-    func setupVideo() {
-        guard let captureDevice = AVCaptureDevice.default(for: AVMediaType.video) else {
-            // Если устройство не найдено, показываем алерт и возвращаемся на предыдущий экран
-            DispatchQueue.main.async {
-                self.showCameraAccessError()
-            }
+
+        view.backgroundColor = UIColor.black
+        captureSession = AVCaptureSession()
+
+        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
+            showError()
             return
         }
 
-        do {
-            let input = try AVCaptureDeviceInput(device: captureDevice)
-            session.addInput(input)
-        } catch {
-            fatalError(error.localizedDescription)
+        guard let videoInput = try? AVCaptureDeviceInput(device: videoCaptureDevice) else {
+            showError()
+            return
         }
 
-        let output = AVCaptureMetadataOutput()
-        session.addOutput(output)
-
-        output.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-        output.metadataObjectTypes = [AVMetadataObject.ObjectType.qr]
-
-        video = AVCaptureVideoPreviewLayer(session: session)
-        video.frame = view.layer.bounds
-        view.layer.addSublayer(video)
-        
-        // Запуск сессии на фоновом потоке
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.session.startRunning()
-        }
-    }
-
-    private func showCameraAccessError() {
-        let alert = UIAlertController(title: "Ошибка доступа", message: "Не удалось получить доступ к камере. Пожалуйста, проверьте настройки приложения.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-            self.dismiss(animated: true, completion: nil)
-        }))
-        
-        // Проверяем, находимся ли мы на главном потоке
-        if Thread.isMainThread {
-            present(alert, animated: true, completion: nil)
+        if captureSession.canAddInput(videoInput) {
+            captureSession.addInput(videoInput)
         } else {
-            DispatchQueue.main.async {
-                self.present(alert, animated: true, completion: nil)
-            }
+            showError()
+            return
+        }
+
+        let metadataOutput = AVCaptureMetadataOutput()
+
+        if captureSession.canAddOutput(metadataOutput) {
+            captureSession.addOutput(metadataOutput)
+
+            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+            metadataOutput.metadataObjectTypes = [.qr]
+        } else {
+            showError()
+            return
+        }
+
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.frame = view.layer.bounds
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+
+        captureSession.startRunning()
+    }
+
+    func showError() {
+        let alert = UIAlertController(title: "Ошибка", message: "Невозможно запустить камеру", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            self.dismiss(animated: true)
+        })
+        present(alert, animated: true)
+        captureSession = nil
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        if captureSession?.isRunning == false {
+            captureSession.startRunning()
         }
     }
 
-    
-    func startRunning() {
-        view.layer.addSublayer(video)
-        session.startRunning()
-    }
-    
-    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
-        guard metadataObjects.count > 0 else { return }
-        if let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject {
-            if object.type == AVMetadataObject.ObjectType.qr, let stringValue = object.stringValue {
-                onQRCodeScanned?(stringValue) // Вызов замыкания с считанным значением
-                session.stopRunning() // Остановка сессии после сканирования
-                view.layer.sublayers?.removeLast() // Удаление слоя превью
-            }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        if captureSession?.isRunning == true {
+            captureSession.stopRunning()
         }
+    }
+
+    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+        captureSession.stopRunning()
+
+        if let metadataObject = metadataObjects.first {
+            guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject,
+                  let stringValue = readableObject.stringValue else { return }
+            AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
+            delegate?.didScanQRCode(stringValue)
+            dismiss(animated: true)
+        }
+    }
+
+    override var prefersStatusBarHidden: Bool {
+        return true
     }
 }
