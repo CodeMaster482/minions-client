@@ -1,51 +1,34 @@
 import React from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import ProtectedRoute from '../src/components/protectedRoutes/ProtectedRoutes';
 
 import './App.css';
 
 import MainPage from './pages/MainPage'
 import ProfilePage from './pages/ProfilePage';
+import { AuthProvider } from './context/AuthProvider';
+import LoginPage from './pages/LoginPage';
 
-interface PrivateRouteProps {
-  element: React.ReactNode; // JSX element or any renderable content
-}
 
-function PrivateRoute({element}: PrivateRouteProps) {
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('session_id');
-    setIsAuthenticated(!!token);
-  }, []);
-
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
-  }
-
-  return element;
-}
 
 function App() {
   return (
-    <div className="App">
-      <Routes>
-        <Route path='/'
-          element={
-            <MainPage/>
-          }
-        />
-        <Route path='/settings'></Route>
-        <Route path='/profile' 
-          element={
-            <PrivateRoute element={<ProfilePage/>}/>
-          }>
-        </Route>
-        <Route path='/login'></Route>
-      </Routes>
-    </div>
+    <AuthProvider>
+      <div className="App">
+        <Routes>
+          <Route path='/' element={ <MainPage/> }/>
+          <Route path='/settings'></Route>
+          
+          {/* Protected Route for /profile */}
+          <Route
+            path="/profile"
+            element={ <ProfilePage /> }
+          />
+          <Route path='/login' element={<LoginPage/>}></Route>
+        </Routes>
+      </div>
+    </AuthProvider>
   );
 }
 

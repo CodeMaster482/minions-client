@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, MemoryRouter } from 'react-router-dom'
 
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -21,7 +21,13 @@ root.render(
       <CssBaseline />
       {/* ThemeProvider makes the theme available down the React tree thanks to React context. */}
       {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-      <BrowserRouter>
+      {/*initialEntries={['/', '/login', '/profile']}*/}
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+        }}
+        basename='/'
+      >
         <App />
       </BrowserRouter>
     </ThemeProvider>
