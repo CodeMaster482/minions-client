@@ -8,8 +8,10 @@ struct LinkCheckView: View {
     @State private var showScanner: Bool = false
     @State private var showDocumentPicker: Bool = false
     @State private var showImagePicker: Bool = false
+    @State private var showProfileOptions: Bool = false
     @State private var selectedFileURL: URL?
     @State private var textColor: Color = .black
+    @State private var isLoading: Bool = false
 
     var body: some View {
         NavigationView {
@@ -31,7 +33,7 @@ struct LinkCheckView: View {
                 .padding(.horizontal)
 
                 ScrollView {
-                    Text(result)
+                    Text(isLoading ? "Загрузка..." : result) // Покажем "Загрузка..." во время запроса
                         .padding()
                         .foregroundColor(textColor)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,6 +80,19 @@ struct LinkCheckView: View {
                                 .font(.caption)
                         }
                     }
+                    
+                    Button(action: {
+                        showProfileOptions = true
+                    }) {
+                        VStack {
+                            Image(systemName: "person.circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 50)
+                            Text("Профиль")
+                                .font(.caption)
+                        }
+                    }
                 }
                 .padding(.bottom)
             }
@@ -99,13 +114,19 @@ struct LinkCheckView: View {
                     uploadImage(at: url)
                 })
             }
+            // Окно для выбора действия профиля
+            .sheet(isPresented: $showProfileOptions) {
+                ProfileOptionsView()
+            }
         }
     }
 
     private func checkLink() {
+        isLoading = true // Устанавливаем состояние загрузки в true
         guard !link.isEmpty, let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "http://90.156.219.248:8080/api/scan/uri?request=\(encodedLink)") else {
             result = "Введите корректную ссылку."
+            isLoading = false // Останавливаем состояние загрузки
             return
         }
 
@@ -113,6 +134,7 @@ struct LinkCheckView: View {
             if let error = error {
                 DispatchQueue.main.async {
                     result = "Ошибка: \(error.localizedDescription)"
+                    isLoading = false // Останавливаем состояние загрузки
                 }
                 return
             }
@@ -120,6 +142,7 @@ struct LinkCheckView: View {
             guard let data = data else {
                 DispatchQueue.main.async {
                     result = "Нет данных."
+                    isLoading = false // Останавливаем состояние загрузки
                 }
                 return
             }
@@ -192,12 +215,14 @@ struct LinkCheckView: View {
                     }
 
                     result = resultText
+                    isLoading = false // Останавливаем состояние загрузки
                 }
             } catch {
                 print("Ошибка при декодировании: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     result = "Ошибка при обработке ответа."
                     textColor = .gray
+                    isLoading = false // Останавливаем состояние загрузки
                 }
             }
 
@@ -206,52 +231,60 @@ struct LinkCheckView: View {
     }
 
     private func uploadFile(at url: URL) {
-        // Проверяем расширение файла
-        let fileExtension = url.pathExtension.lowercased()
-        if fileExtension == "png" || fileExtension == "jpg" || fileExtension == "jpeg" {
-            uploadImage(at: url)
-            return
-        }
+            isLoading = true  // Устанавливаем флаг загрузки
 
-        guard let serverURL = URL(string: "http://90.156.219.248:8080/api/scan/file") else {
-            result = "Некорректный URL сервера."
-            return
-        }
-
-        var request = URLRequest(url: serverURL)
-        request.httpMethod = "POST"
-
-        let boundary = UUID().uuidString
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        var body = Data()
-
-        // Добавляем файл в тело запроса
-        let filename = url.lastPathComponent
-        let mimeType = "application/octet-stream"
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(try! Data(contentsOf: url))
-        body.append("\r\n".data(using: .utf8)!)
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-
-        request.httpBody = body
-
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                DispatchQueue.main.async {
-                    result = "Ошибка: \(error.localizedDescription)"
-                }
+            let fileExtension = url.pathExtension.lowercased()
+            if fileExtension == "png" || fileExtension == "jpg" || fileExtension == "jpeg" {
+                uploadImage(at: url)
                 return
             }
 
-            guard let data = data else {
-                DispatchQueue.main.async {
-                    result = "Нет данных."
-                }
+            guard let serverURL = URL(string: "http://90.156.219.248:8080/api/scan/file") else {
+                result = "Некорректный URL сервера."
+                isLoading = false  // Завершаем загрузку
                 return
             }
+
+            var request = URLRequest(url: serverURL)
+            request.httpMethod = "POST"
+
+            let boundary = UUID().uuidString
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+            var body = Data()
+
+            // Добавляем файл в тело запроса
+            let filename = url.lastPathComponent
+            let mimeType = "application/octet-stream"
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+            body.append(try! Data(contentsOf: url))
+            body.append("\r\n".data(using: .utf8)!)
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+            request.httpBody = body
+
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                DispatchQueue.main.async {
+                    isLoading = false  // Завершаем загрузку
+                }
+
+                if let error = error {
+                    DispatchQueue.main.async {
+                        result = "Ошибка загрузки файла: \(error.localizedDescription)"
+                        isLoading = false  // Завершаем загрузку
+                    }
+                    return
+                }
+
+                guard let data = data else {
+                    DispatchQueue.main.async {
+                        result = "Нет данных при загрузке файла."
+                        isLoading = false  // Завершаем загрузку
+                    }
+                    return
+                }
 
             do {
                 let decoder = JSONDecoder()
@@ -317,6 +350,7 @@ struct LinkCheckView: View {
                     }
 
                     result = resultText
+                    isLoading = false  // Завершаем загрузку
                 }
             } catch {
                 print("Ошибка при декодировании: \(error.localizedDescription)")
@@ -324,14 +358,17 @@ struct LinkCheckView: View {
                     result = "Ошибка при обработке ответа."
                     textColor = .gray
                 }
+                isLoading = false  // Завершаем загрузку
             }
         }
         task.resume()
     }
 
     private func uploadImage(at url: URL) {
+        isLoading = true
         guard let serverURL = URL(string: "http://90.156.219.248:8080/api/scan/screen") else {
             result = "Некорректный URL сервера."
+            isLoading = false  // Завершаем загрузку
             return
         }
 
@@ -358,13 +395,15 @@ struct LinkCheckView: View {
             if let error = error {
                 DispatchQueue.main.async {
                     result = "Ошибка: \(error.localizedDescription)"
+                    isLoading = false  // Завершаем загрузку
                 }
                 return
             }
 
             guard let data = data else {
                 DispatchQueue.main.async {
-                    result = "Нет данных."
+                    result = "Нет данных при загрузке изображения."
+                    isLoading = false  // Завершаем загрузку
                 }
                 return
             }
@@ -439,13 +478,15 @@ struct LinkCheckView: View {
                     }
 
                     result = resultText
+                    isLoading = false  // Завершаем загрузку
                 }
             } catch {
                 print("Ошибка при декодировании: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    result = "Ошибка при обработке ответа."
+                    result = "Ссылок не найдено."
                     textColor = .gray
                 }
+                isLoading = false  // Завершаем загрузку
             }
         }
         task.resume()
