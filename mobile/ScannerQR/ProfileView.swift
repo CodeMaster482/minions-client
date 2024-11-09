@@ -13,24 +13,29 @@ struct ProfileOptionsView: View {
     @State private var isRegistration = false
     @State private var isAuthorization = false
     @State private var htmlContent: String? = nil  // Для хранения HTML-контента
+    @State private var isLoading: Bool = true  // Для отслеживания состояния загрузки
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
                 if isLoggedIn {
-                    // Отображаем HTML-график
-                    if let htmlContent = htmlContent {
+                    // Проверяем, загрузился ли HTML
+                    if isLoading {
+                        Text("Загрузка...")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                            .padding()
+                    } else if let htmlContent = htmlContent {
                         WebView(htmlContent: htmlContent)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding(.top, 20)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.top, 20)
                     }
 
                     // Кнопка "Выход из аккаунта"
                     Button("Выход из аккаунта") {
                         logoutUser()
                     }
-                    
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -77,7 +82,6 @@ struct ProfileOptionsView: View {
                     }) {
                         HStack {
                             Image(systemName: "arrow.backward")
-                            //Text("Назад")
                         }
                     }
                 }
@@ -91,10 +95,10 @@ struct ProfileOptionsView: View {
             }
         }
         .onAppear {
-                    if isLoggedIn {
-                        fetchHtmlContent()  // Загружаем HTML-контент при успешном входе
-                    }
-                }
+            if isLoggedIn {
+                fetchHtmlContent()  // Загружаем HTML-контент при успешном входе
+            }
+        }
     }
 
     private func fetchHtmlContent() {
@@ -106,12 +110,14 @@ struct ProfileOptionsView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     print("Ошибка при загрузке HTML: \(error.localizedDescription)")
+                    isLoading = false
                     return
                 }
 
                 if let data = data, let htmlString = String(data: data, encoding: .utf8) {
                     htmlContent = htmlString  // Сохраняем HTML в состояние
                 }
+                isLoading = false  // Останавливаем индикатор загрузки
             }
         }
         task.resume()
@@ -142,6 +148,7 @@ struct ProfileOptionsView: View {
         task.resume()
     }
 }
+
 
 // WebView для отображения HTML-контента
 struct WebView: View {
