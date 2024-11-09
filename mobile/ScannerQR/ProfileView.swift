@@ -201,10 +201,12 @@ struct RegistrationView: View {
             .cornerRadius(10)
             .padding(.horizontal)
 
+            // Отображение ошибки (если есть)
             if !errorMessage.isEmpty {
                 Text(errorMessage)
-                    .foregroundColor(.red)
+                    .foregroundColor(.red)  // Красный цвет для ошибки
                     .padding(.horizontal)
+                    .padding(.top, 10)  // Отступ сверху, чтобы не накладывалось на другие элементы
             }
         }
         .navigationTitle("Регистрация")
@@ -222,64 +224,77 @@ struct RegistrationView: View {
         }
     }
     private func registerUser() {
-            guard let url = URL(string: "http://90.156.219.248:8080/api/auth/register") else {
-                errorMessage = "Некорректный URL."
-                return
-            }
-
-            guard password == confirmPassword else {
-                errorMessage = "Пароли не совпадают."
-                return
-            }
-
-            let registrationData = [
-                "username": login,
-                "password": password
-            ]
-
-            guard let jsonData = try? JSONSerialization.data(withJSONObject: registrationData, options: []) else {
-                errorMessage = "Ошибка формирования данных."
-                return
-            }
-
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = jsonData
-
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                DispatchQueue.main.async {
-                    if let error = error {
-                        errorMessage = "Ошибка: \(error.localizedDescription)"
-                        return
-                    }
-
-                    guard let httpResponse = response as? HTTPURLResponse else {
-                        errorMessage = "Неизвестный ответ сервера."
-                        return
-                    }
-
-                    switch httpResponse.statusCode {
-                    case 201:
-                        errorMessage = "Регистрация успешна!"
-                        isRegistration = false
-                        isLoggedIn = true
-                    case 400:
-                        errorMessage = "Неверные данные для регистрации."
-                    case 500:
-                        errorMessage = "Внутренняя ошибка сервера."
-                    default:
-                        if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                            errorMessage = "Ошибка: \(responseString)"
-                        } else {
-                            errorMessage = "Неизвестная ошибка."
-                        }
-                    }
-                    print(errorMessage)
-                }
-            }
-            task.resume()
+        // Проверка длины логина
+        guard login.count >= 3 && login.count <= 50 else {
+            errorMessage = "Логин должен быть от 3 до 50 символов."
+            return
         }
+
+        // Проверка длины пароля
+        guard password.count >= 6 && password.count <= 100 else {
+            errorMessage = "Пароль должен быть от 6 до 100 символов."
+            return
+        }
+
+        // Проверка совпадения пароля
+        guard password == confirmPassword else {
+            errorMessage = "Пароли не совпадают."
+            return
+        }
+
+        guard let url = URL(string: "http://90.156.219.248:8080/api/auth/register") else {
+            errorMessage = "Некорректный URL."
+            return
+        }
+
+        let registrationData = [
+            "username": login,
+            "password": password
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: registrationData, options: []) else {
+            errorMessage = "Ошибка формирования данных."
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    errorMessage = "Ошибка: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    errorMessage = "Неизвестный ответ сервера."
+                    return
+                }
+
+                switch httpResponse.statusCode {
+                case 201:
+                    errorMessage = "Регистрация успешна!"
+                    isRegistration = false
+                    isLoggedIn = true
+                case 400:
+                    errorMessage = "Неверные данные для регистрации."
+                case 500:
+                    errorMessage = "Внутренняя ошибка сервера."
+                default:
+                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                        errorMessage = "Ошибка: \(responseString)"
+                    } else {
+                        errorMessage = "Неизвестная ошибка."
+                    }
+                }
+                print(errorMessage)
+            }
+        }
+        task.resume()
+    }
 }
 
 struct AuthorizationView: View {
@@ -310,10 +325,12 @@ struct AuthorizationView: View {
             .cornerRadius(10)
             .padding(.horizontal)
 
+            // Отображение ошибки (если есть)
             if !errorMessage.isEmpty {
                 Text(errorMessage)
-                    .foregroundColor(.red)
+                    .foregroundColor(.red)  // Красный цвет для ошибки
                     .padding(.horizontal)
+                    .padding(.top, 10)  // Отступ сверху
             }
         }
         .navigationTitle("Авторизация")
@@ -332,57 +349,69 @@ struct AuthorizationView: View {
     }
 
     private func loginUser() {
-            guard let url = URL(string: "http://90.156.219.248:8080/api/auth/login") else {
-                errorMessage = "Некорректный URL."
-                return
-            }
-
-            let loginData = [
-                "username": login,
-                "password": password
-            ]
-
-            guard let jsonData = try? JSONSerialization.data(withJSONObject: loginData, options: []) else {
-                errorMessage = "Ошибка формирования данных."
-                return
-            }
-
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = jsonData
-
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                DispatchQueue.main.async {
-                    if let error = error {
-                        errorMessage = "Ошибка: \(error.localizedDescription)"
-                        return
-                    }
-
-                    guard let httpResponse = response as? HTTPURLResponse else {
-                        errorMessage = "Неизвестный ответ сервера."
-                        return
-                    }
-
-                    switch httpResponse.statusCode {
-                    case 200:
-                        errorMessage = "Успешный вход!"
-                        isAuthorization = false
-                        isLoggedIn = true
-                    case 400, 401:
-                        errorMessage = "Неверные данные для входа."
-                    case 500:
-                        errorMessage = "Внутренняя ошибка сервера."
-                    default:
-                        if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                            errorMessage = "Ошибка: \(responseString)"
-                        } else {
-                            errorMessage = "Неизвестная ошибка."
-                        }
-                    }
-                    print(errorMessage)
-                }
-            }
-            task.resume()
+        // Проверка длины логина
+        guard login.count >= 3 && login.count <= 50 else {
+            errorMessage = "Логин должен быть от 3 до 50 символов."
+            return
         }
+
+        // Проверка длины пароля
+        guard password.count >= 6 && password.count <= 100 else {
+            errorMessage = "Пароль должен быть от 6 до 100 символов."
+            return
+        }
+
+        guard let url = URL(string: "http://90.156.219.248:8080/api/auth/login") else {
+            errorMessage = "Некорректный URL."
+            return
+        }
+
+        let loginData = [
+            "username": login,
+            "password": password
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: loginData, options: []) else {
+            errorMessage = "Ошибка формирования данных."
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    errorMessage = "Ошибка: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    errorMessage = "Неизвестный ответ сервера."
+                    return
+                }
+
+                switch httpResponse.statusCode {
+                case 200:
+                    errorMessage = "Успешный вход!"
+                    isAuthorization = false
+                    isLoggedIn = true
+                case 400, 401:
+                    errorMessage = "Неверные данные для входа."
+                case 500:
+                    errorMessage = "Внутренняя ошибка сервера."
+                default:
+                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                        errorMessage = "Ошибка: \(responseString)"
+                    } else {
+                        errorMessage = "Неизвестная ошибка."
+                    }
+                }
+                print(errorMessage)
+            }
+        }
+        task.resume()
+    }
 }
