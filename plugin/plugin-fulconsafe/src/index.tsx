@@ -1,13 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom'
+
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { darkTheme, lightTheme } from './lib/theme';
-
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 
 
 const root = ReactDOM.createRoot(
@@ -20,7 +21,9 @@ root.render(
       <CssBaseline />
       {/* ThemeProvider makes the theme available down the React tree thanks to React context. */}
       {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>
 );

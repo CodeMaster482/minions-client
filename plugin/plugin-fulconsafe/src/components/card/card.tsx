@@ -1,12 +1,12 @@
 import * as React from 'react';
 
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
+import { Box } from '@mui/material';
+import { Card } from '@mui/material';
+import { CardActions } from '@mui/material';
+import { CardContent } from '@mui/material';
 import { CardProps } from '@mui/material/Card';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { Button } from '@mui/material';
+import { Typography } from '@mui/material';
 
 type CustomCardProps = CardProps & {
   scanResult: {
@@ -28,6 +28,10 @@ type CustomCardProps = CardProps & {
       Categories?: string[];
       FilesCount?: number;
     };
+    FileGeneralInfo?: {
+        FileStatus?: string;
+        Size?: number;
+    };
   };
 };
 
@@ -41,6 +45,7 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
         <CardContent sx={{display: 'contents'}}>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14 }}>
             {scanResult.UrlGeneralInfo?.Url}
+            {scanResult.FileGeneralInfo?.FileStatus}
           </Typography>
           <Typography variant="h5" component="div">
             {scanResult.Zone === "Red" 
@@ -50,6 +55,11 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
               : "нет точной информации"}
           </Typography>
 
+          {scanResult.FileGeneralInfo && (
+            <Typography variant="body2">
+              <strong>Размер файла:</strong> {scanResult.FileGeneralInfo.Size}
+            </Typography>
+          )}
           {scanResult.IpGeneralInfo && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="h6">Информация об IP</Typography>

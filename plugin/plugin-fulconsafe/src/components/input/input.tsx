@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Input as BaseInput , InputProps } from '@mui/base/Input';
 import TextField, { TextFieldProps } from '@mui/material/TextField'
 import { styled } from '@mui/system';
 
@@ -14,6 +13,7 @@ const Input = React.forwardRef<HTMLDivElement, CustomInputProps>(function Custom
 // input: InputElement
 
 export default Input;
+
 const blue = {
   100: '#DAECFF',
   200: '#b6daff',
