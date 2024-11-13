@@ -18,14 +18,11 @@ function App() {
       <div className="App">
         <Routes>
           <Route path='/' element={ <MainPage/> }/>
-          <Route path='/settings'></Route>
+          <Route path='/settings'/>
           
           {/* Protected Route for /profile */}
-          <Route
-            path="/profile"
-            element={ <ProfilePage /> }
-          />
-          <Route path='/login' element={ <LoginPage/> }></Route>
+          <Route path="/profile" element={ <ProfilePage /> }/>
+          <Route path='/login' element={ <LoginPage/> }/>
         </Routes>
       </div>
     </AuthProvider>

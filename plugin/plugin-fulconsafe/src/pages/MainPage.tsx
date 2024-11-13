@@ -1,14 +1,13 @@
-import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
+import { IconButton, Collapse, Typography, CircularProgress } from '@mui/material';
+
 import SendIcon from '@mui/icons-material/Send';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import Face2RoundedIcon from '@mui/icons-material/Face2Rounded';
-import CircularProgress from '@mui/material/CircularProgress';
-import Collapse from '@mui/material/Collapse';
+// import CircularProgress from '@mui/material/CircularProgress';
 
 import Input from '../components/input/input';
 import InfoCard from '../components/card/card';
@@ -21,13 +20,13 @@ const IP_PATTERN = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/;
 const DOMAIN_PATTERN = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 
 const MainPage: React.FC = () => {
-  const [URL, setURL] = React.useState('');
-  const [error, setError] = React.useState<string | null>(null);
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [scanResult, setScanResult] = React.useState<any>(null);
+  const [URL, setURL] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [scanResult, setScanResult] = useState<any>(null);
 
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleProfileButtonClick = () => navigate('/profile');
@@ -52,17 +51,27 @@ const MainPage: React.FC = () => {
       });
 
       if (!response.ok) throw new Error(`Error: status ${response.status}`);
+
       const data = await response.json();
       setScanResult(data);
       setError(null);
-    } catch (error: any) {
-      console.error('Request failed:', error);
-      setError(error.message);
+    } catch (err: any) {
+      console.error(`Error: request failed: `, err);
+      
+      setError(err.message);
       setScanResult(null);
     } finally {
       setLoading(false);
     }
-  };
+  }
+  
+    const handleButtonClick = async () => {
+      if (!validateInput(URL)) {
+        setError('Введите корректный URL, IP-адрес или домен.');
+        setScanResult(null); // Clear previous result
+        return;
+      }
+    }
 
   // Handle file upload
   const handleFileUpload = async (file: File, url: string) => {
@@ -90,12 +99,12 @@ const MainPage: React.FC = () => {
   };
 
   // Drag-and-drop handlers
+  const handleDragLeave = () => setIsDragging(false);
+
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     if (!isDragging) setIsDragging(true);
   };
-
-  const handleDragLeave = () => setIsDragging(false);
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
