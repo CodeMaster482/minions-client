@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -10,7 +11,7 @@ import Face2RoundedIcon from '@mui/icons-material/Face2Rounded';
 
 import Input from '../components/input/input';
 import InfoCard from '../components/card/card';
-
+import Collapse from '@mui/material/Collapse'; // Import Collapse for animation
 
 function MainPage() {
     const [URL, setInputValue] = React.useState('');
@@ -19,6 +20,11 @@ function MainPage() {
     const [isDragging, setIsDragging] = React.useState(false);
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const navigate = useNavigate();
+    const handleProfileButtonClick = () => {
+      navigate('/profile'); // Programmatically navigate to the profile page
+    };
 
 
     // Validation function
@@ -29,6 +35,14 @@ function MainPage() {
 
       return urlPattern.test(value) || ipPattern.test(value) || domainPattern.test(value);
     };
+
+    React.useEffect(() => {
+      if (URL.length > 256) {
+        setError('URL слишком длинный. Максимальная длина: 256 символов.');
+      } else {
+        setError(null); // Clear error if the URL length is within the limit
+      }
+    }, [URL]);
   
     const handleButtonClick = async () => {
       if (!validateInput(URL)) {
@@ -129,22 +143,6 @@ function MainPage() {
               justifyContent: 'center', 
               minHeight: '50vh', 
               flexDirection: 'column',
-              /*
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              color: 'white',
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              zIndex: 2000,
-              textAlign: 'center'
-              */
             }}
           >
             <Typography variant="h4" component="div"><strong>Drop</strong> file here to <strong>upload</strong></Typography>
@@ -159,7 +157,7 @@ function MainPage() {
           display: !isDragging ? 'inherit' : 'none'
         }}
         >
-          <IconButton href='/profile'>
+          <IconButton onClick={handleProfileButtonClick}>
             <Face2RoundedIcon/>
           </IconButton>
           <IconButton href='/settings'>
@@ -206,8 +204,12 @@ function MainPage() {
             </IconButton>
           </div>
   
-          {/* Display scan results */}
-          {scanResult && <InfoCard scanResult={scanResult}></InfoCard>}
+          {/* Display scan results with animation */}
+          <Collapse in={!!scanResult} timeout={500}> {/* Animation duration */}
+            <div>
+              {scanResult && <InfoCard scanResult={scanResult}></InfoCard>}
+            </div>
+          </Collapse>
         </div>
       </div>
     );

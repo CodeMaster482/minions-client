@@ -1,12 +1,8 @@
 import * as React from 'react';
-
-import { Box } from '@mui/material';
-import { Card } from '@mui/material';
-import { CardActions } from '@mui/material';
-import { CardContent } from '@mui/material';
+import { Box, Card, CardActions, CardContent, Button, Typography, Chip } from '@mui/material';
 import { CardProps } from '@mui/material/Card';
-import { Button } from '@mui/material';
-import { Typography } from '@mui/material';
+
+import { getCategoryLabel } from '../../lib/categoriesMap';
 
 type CustomCardProps = CardProps & {
   scanResult: {
@@ -29,8 +25,8 @@ type CustomCardProps = CardProps & {
       FilesCount?: number;
     };
     FileGeneralInfo?: {
-        FileStatus?: string;
-        Size?: number;
+      FileStatus?: string;
+      Size?: number;
     };
   };
 };
@@ -40,50 +36,63 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
   ref,
 ) {
   return (
-    <Box sx={{ minWidth: 275 }}>
-      <Card variant="outlined" {...props} ref={ref}>
-        <CardContent sx={{display: 'contents'}}>
-          <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14 }}>
+    <Box sx={{ minWidth: 400, margin: '1.5vh' }}>
+      <Card variant="outlined" {...props} ref={ref} sx={{ margin: '1vh' }}>
+        <CardContent sx={{ display: 'contents' }}>
+          <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14, margin: '1vh' }}>
             {scanResult.UrlGeneralInfo?.Url}
             {scanResult.FileGeneralInfo?.FileStatus}
           </Typography>
-          <Typography variant="h5" component="div">
-            {scanResult.Zone === "Red" 
-              ? "данная ссылка опасна" 
-              : scanResult.Zone === "Green" 
-              ? "данная ссылка безопасна" 
-              : "нет точной информации"}
+          <Typography variant="h5" component="div" sx={{ margin: '1vh' }}>
+            {scanResult.Zone === 'Red'
+              ? 'Данная ссылка опасна'
+              : scanResult.Zone === 'Green'
+              ? 'Данная ссылка безопасна'
+              : 'Нет точной информации'}
           </Typography>
 
           {scanResult.FileGeneralInfo && (
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ margin: '1vh' }}>
               <strong>Размер файла:</strong> {scanResult.FileGeneralInfo.Size}
             </Typography>
           )}
+          
+          {/* IP General Info */}
           {scanResult.IpGeneralInfo && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="h6">Информация об IP</Typography>
-              <Typography variant="body2">
+            <Box sx={{ mt: 2, margin: '1vh' }}>
+              <Typography variant="h6" sx={{ margin: '1vh' }}>Информация об IP</Typography>
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>IP:</strong> {scanResult.IpGeneralInfo.Ip}
               </Typography>
-              <Typography variant="body2">
-                <strong>Категория:</strong> {(scanResult.IpGeneralInfo.Categories || []).join(", ") || "нет данных"}
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>Категория:</strong> 
               </Typography>
-              <Typography variant="body2">
-                <strong>Страна:</strong> {scanResult.IpGeneralInfo.CountryCode || "нет данных"}
+              <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {(scanResult.IpGeneralInfo.Categories || []).map((category, index) => (
+                    <Chip key={index} label={getCategoryLabel(category, 'en')} variant="outlined" sx={{ margin: '2px' }} />
+                  ))}
+              </Box>
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>Страна:</strong> {scanResult.IpGeneralInfo.CountryCode || 'нет данных'}
               </Typography>
             </Box>
           )}
 
+          {/* Domain General Info */}
           {scanResult.DomainGeneralInfo && (
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 2, margin: '1vh' }}>
               <Typography variant="h6">Информация о домене</Typography>
               <Typography variant="body2">
                 <strong>Домен:</strong> {scanResult.DomainGeneralInfo.Domain}
               </Typography>
               <Typography variant="body2">
-                <strong>Категория:</strong> {(scanResult.DomainGeneralInfo.Categories || []).join(", ") || "нет данных"}
+                <strong>Категория:</strong>
               </Typography>
+              <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {(scanResult.DomainGeneralInfo.Categories || []).map((category, index) => (
+                    <Chip key={index} label={getCategoryLabel(category, 'en')} variant="outlined" sx={{ margin: '2px' }} />
+                  ))}
+              </Box>
               <Typography variant="body2">
                 <strong>Количество файлов:</strong> {scanResult.DomainGeneralInfo.FilesCount || 0}
               </Typography>
@@ -96,6 +105,7 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
             </Box>
           )}
 
+          {/* URL General Info */}
           {scanResult.UrlGeneralInfo && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="h6">Информация о URL</Typography>
@@ -103,8 +113,13 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
                 <strong>URL:</strong> {scanResult.UrlGeneralInfo.Url}
               </Typography>
               <Typography variant="body2">
-                <strong>Категория:</strong> {(scanResult.UrlGeneralInfo.Categories || []).join(", ") || "нет данных"}
+                <strong>Категория:</strong>
               </Typography>
+              <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {(scanResult.UrlGeneralInfo.Categories || []).map((category, index) => (
+                    <Chip key={index} label={getCategoryLabel(category, 'en')} variant="outlined" sx={{ margin: '2px' }} />
+                  ))}
+              </Box>
               <Typography variant="body2">
                 <strong>Количество файлов:</strong> {scanResult.UrlGeneralInfo.FilesCount || 0}
               </Typography>
@@ -112,7 +127,7 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
           )}
         </CardContent>
         <CardActions>
-          <Button size="small">Learn More</Button>
+          <Button size="small">Detailed View</Button>
         </CardActions>
       </Card>
     </Box>
@@ -120,28 +135,3 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
 });
 
 export default InfoCard;
-
-// export default function OutlinedCard() {
-//   const scanResult = {
-//     Zone: "Red",
-//     IpGeneralInfo: {
-//       Ip: "192.168.0.1",
-//       Categories: ["Malicious", "Spam"],
-//       CountryCode: "US",
-//     },
-//     DomainGeneralInfo: {
-//       Domain: "example.com",
-//       Categories: ["Technology", "Business"],
-//       FilesCount: 15,
-//       Ipv4Count: 3,
-//       HitsCount: 100,
-//     },
-//     UrlGeneralInfo: {
-//       Url: "http://example.com",
-//       Categories: ["News"],
-//       FilesCount: 5,
-//     },
-//   };
-
-//   return <InfoCard scanResult={scanResult} />;
-// }

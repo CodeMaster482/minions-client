@@ -22,14 +22,14 @@ root.render(
       {/* ThemeProvider makes the theme available down the React tree thanks to React context. */}
       {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
       {/*initialEntries={['/', '/login', '/profile']}*/}
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-        }}
+      {/*basename='/'*/}
+      <MemoryRouter
+        future={{v7_startTransition: true}}
         basename='/'
+        initialEntries={['/', '/about', '/contact']} initialIndex={0}
       >
         <App />
-      </BrowserRouter>
+      </MemoryRouter>
     </ThemeProvider>
   </React.StrictMode>
 );

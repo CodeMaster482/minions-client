@@ -25,7 +25,7 @@ function App() {
             path="/profile"
             element={ <ProfilePage /> }
           />
-          <Route path='/login' element={<LoginPage/>}></Route>
+          <Route path='/login' element={ <LoginPage/> }></Route>
         </Routes>
       </div>
     </AuthProvider>

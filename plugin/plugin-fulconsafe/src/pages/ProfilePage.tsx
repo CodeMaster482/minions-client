@@ -13,7 +13,6 @@ function ProfilePage() {
   // Effect hook to handle authentication check and fetching HTML content
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log('go to login')
       navigate('/login'); // Redirect to login if not authenticated
     }
   }, [isAuthenticated, navigate]);
