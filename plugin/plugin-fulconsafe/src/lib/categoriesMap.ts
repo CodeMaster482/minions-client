@@ -1,3 +1,5 @@
+
+
 const CategoryMapEN: { [key: string]: string } = {
     "CATEGORY_18_DATING":"Adult dating",
     "CATEGORY_ABORTION":"Abortion",
@@ -232,8 +234,148 @@ const CategoryMapRU: { [key: string]: string } = {
     "CATEGORY__EMPTY":"Общая категория"
 };
 
-export const getCategoryLabel = (categoryCode: string, language: 'en' | 'ru'): string => {
-    const r = language === 'en' ? CategoryMapEN[categoryCode] : CategoryMapRU[categoryCode];
-    console.log(r);
-    return r;
+const CategoryMapColor: { [key: string]: string } = {
+    "CATEGORY_18_DATING":                           "#FF69B4",      // Hot pink for dating
+    "CATEGORY_ABORTION":                            "#FF6347",      // Tomato red for abortion (sensitive topic)
+    "CATEGORY_ADS":                                 "#FFD700",      // Gold for advertisements
+    "CATEGORY_ADWARE":                              "#D3D3D3",      // Light gray for adware
+    "CATEGORY_ALCOHOL":                             "#8B4513",      // Brown for alcohol
+    "CATEGORY_ANONYMIZERS":                         "#A9A9A9",      // Dark gray for anonymizers
+    "CATEGORY_ANOREXIA":                            "#FFB6C1",      // Light pink for anorexia (sensitive topic)
+    "CATEGORY_APT":                                 "#00008B",      // Dark blue for APT-related
+    "CATEGORY_APT_CNC_TRACKING":                    "#483D8B",      // Dark slate blue for C&C tracking
+    "CATEGORY_APT_SINKHOLE":                        "#5F9EA0",      // Cadet blue for sinkhole
+    "CATEGORY_ARTS":                                "#800080",      // Purple for arts
+    "CATEGORY_ASTROLOGY_AND_ESOTERICA":             "#6A5ACD",      // Slate blue for astrology
+    "CATEGORY_AUDIO_AND_VIDEO":                     "#1E90FF",      // Dodger blue for audio/video
+    "CATEGORY_BANKS":                               "#008000",      // Green for banks
+    "CATEGORY_BETTING":                             "#FF4500",      // Orange red for betting
+    "CATEGORY_BLOGS":                               "#4682B4",      // Steel blue for blogs
+    "CATEGORY_BOOKS_AND_WRITING":                   "#2F4F4F",      // Dark slate gray for books
+    "CATEGORY_BOTNET_CNC":                          "#DC143C",      // Crimson for botnet C&C
+    "CATEGORY_BUSINESS":                            "#32CD32",      // Lime green for business
+    "CATEGORY_CARDS_PAYMENTS":                      "#D2691E",      // Chocolate for payments
+    "CATEGORY_CASINO_CARD_GAMES":                   "#B22222",      // Firebrick red for casino
+    "CATEGORY_CHATS_FORUMS":                        "#8B008B",      // Dark magenta for chats
+    "CATEGORY_COMPROMISED":                         "#FF0000",      // Red for compromised
+    "CATEGORY_COMPUTERSELECTRONICS":                "#A52A2A",      // Brown for computers/electronics
+    "CATEGORY_COMPUTER_GAMES":                      "#00FFFF",      // Aqua for computer games
+    "CATEGORY_CRIMEWARE":                           "#B22222",      // Firebrick for crimeware
+    "CATEGORY_CRYPTOCURANDMINING":                  "#4B0082",      // Indigo for crypto
+    "CATEGORY_CULTURE_AND_SOCIETY":                 "#800000",      // Maroon for culture
+    "CATEGORY_DATING_SITES":                        "#FF1493",      // Deep pink for dating sites
+    "CATEGORY_DISCONTENT":                          "#C71585",      // Medium violet red for discontent
+    "CATEGORY_DISCRIMINATION":                      "#8B0000",      // Dark red for discrimination
+    "CATEGORY_DRUGS":                               "#A52A2A",      // Brown for drugs
+    "CATEGORY_DYNAMIC_DNS":                         "#A9A9A9",      // Dark gray for Dynamic DNS
+    "CATEGORY_EDUCATION":                           "#4682B4",      // Steel blue for education
+    "CATEGORY_EDUCATION_PORTALS_KNOWLEDGE_BASES":   "#7FFF00",      // Chartreuse for education portals
+    "CATEGORY_ELECTRONIC_COMMERCE":                 "#228B22",      // Forest green for e-commerce
+    "CATEGORY_EXTREMISM_RACISM":                    "#FF0000",      // Red for extremism/racism
+    "CATEGORY_FASHION_STYLE":                       "#FF69B4",      // Hot pink for fashion
+    "CATEGORY_FILE_SHARING":                        "#8B008B",      // Dark magenta for file sharing
+    "CATEGORY_FINANCEECONOMICS":                    "#32CD32",      // Lime green for finance
+    "CATEGORY_FISHING_HUNTING":                     "#A52A2A",      // Brown for fishing and hunting
+    "CATEGORY_GAMBLING":                            "#FF6347",      // Tomato red for gambling
+    "CATEGORY_GENERAL":                             "#808080",      // Gray for general category
+    "CATEGORY_GOVERNMENT_POLITICS_LAWS":            "#0000FF",      // Blue for government/politics
+    "CATEGORY_HATE_AND_DISCRIMINATION":             "#B22222",      // Firebrick for hate
+    "CATEGORY_HEALTH":                              "#008080",      // Teal for health
+    "CATEGORY_HEALTH_AND_BEAUTY":                   "#DDA0DD",      // Plum for health and beauty
+    "CATEGORY_HOBBY_AND_ENTERTAINMENT":             "#FFD700",      // Gold for hobbies
+    "CATEGORY_HOME_AND_FAMILY":                     "#98FB98",      // Pale green for home/family
+    "CATEGORY_HOSTING_AND_DOMAINS":                 "#B0C4DE",      // Light steel blue for hosting
+    "CATEGORY_HUMOUR":                              "#FFD700",      // Gold for humor
+    "CATEGORY_ICS_THREAT":                          "#8B0000",      // Dark red for ICS threat
+    "CATEGORY_ILLEGAL_SOFTWARE":                    "#D2691E",      // Chocolate for illegal software
+    "CATEGORY_INFECTED":                            "#FF4500",      // Orange red for infected
+    "CATEGORY_INFORMATIONSECURITY":                 "#00008B",      // Dark blue for info security
+    "CATEGORY_INFORMATION_TECHNOLOGIES":            "#4682B4",      // Steel blue for tech
+    "CATEGORY_INTERNET_COMMUNICATION_MEDIA":        "#1E90FF",      // Dodger blue for communication
+    "CATEGORY_INTERNET_SERVICES":                   "#00FFFF",      // Aqua for services
+    "CATEGORY_JOB_SEARCH":                          "#FFD700",      // Gold for job search
+    "CATEGORY_KIDSINTERNET":                        "#FF1493",      // Deep pink for kids
+    "CATEGORY_LEGISLATION":                         "#A9A9A9",      // Dark gray for legislation
+    "CATEGORY_LGBT":                                "#800080",      // Purple for LGBT
+    "CATEGORY_LINGERIE":                            "#FFB6C1",      // Light pink for lingerie
+    "CATEGORY_LOTTERIES":                           "#FF6347",      // Tomato red for lotteries
+    "CATEGORY_MALICIOUS_IP":                        "#8B0000",      // Dark red for malicious IP
+    "CATEGORY_MALWARE":                             "#DC143C",      // Crimson for malware
+    "CATEGORY_MEDICAL_PHARMACY":                    "#32CD32",      // Lime green for medical
+    "CATEGORY_MILITARY":                            "#808080",      // Gray for military
+    "CATEGORY_MUSIC":                               "#0000FF",      // Blue for music
+    "CATEGORY_NARCOTICS":                           "#A52A2A",      // Brown for narcotics
+    "CATEGORY_NAT_GATEWAY":                         "#4682B4",      // Steel blue for NAT gateway
+    "CATEGORY_NETATTACK_BRUTEFORCE":                "#FF0000",      // Red for brute force
+    "CATEGORY_NETATTACK_DDOS":                      "#FF4500",      // Orange red for DDoS
+    "CATEGORY_NETATTACK_INTRUSION":                 "#B22222",      // Firebrick for intrusion
+    "CATEGORY_NETATTACK_SCAN":                      "#D2691E",      // Chocolate for scan
+    "CATEGORY_NEWS_MEDIA":                          "#32CD32",      // Lime green for news media
+    "CATEGORY_NUDISM":                              "#FFD700",      // Gold for nudism
+    "CATEGORY_ONLINE_SHOPS":                        "#228B22",      // Forest green for online shops
+    "CATEGORY_ONLINE_SHOPS_WITH_OWN_PAYMENT":       "#228B22",      // Forest green for online shops with payment
+    "CATEGORY_OTHER":                               "#808080",      // Gray for other
+    "CATEGORY_PAYMENTS_SYSTEMS":                    "#D2691E",      // Chocolate for payments
+    "CATEGORY_PETS_ANIMALS":                        "#FFD700",      // Gold for pets
+    "CATEGORY_PHISHING":                            "#DC143C",      // Crimson for phishing
+    "CATEGORY_POLICE_DECISION":                     "#A9A9A9",      // Dark gray for police decision
+    "CATEGORY_PORNO_AND_EROTICS":                   "#FF1493",      // Deep pink for pornography
+    "CATEGORY_PROXY":                               "#A9A9A9",      // Dark gray for proxy
+    "CATEGORY_RELIGIONS_RELIGIOUS_ASSOCIATIONS":    "#6A5ACD",      // Slate blue for religion
+    "CATEGORY_REMOTE_ADMIN_TOOLS":                  "#8B0000",      // Dark red for admin tools
+    "CATEGORY_RENT_REAL_ESTATE_SERVICES":           "#3CB371",      // Medium sea green for real estate
+    "CATEGORY_RESTAURANTS_CAFE_FOOD":               "#FF6347",      // Tomato red for food
+    "CATEGORY_SCHOOLS_UNIVERSITIES":                "#4682B4",      // Steel blue for schools
+    "CATEGORY_SEARCH_ENGINES_AND_SERVICES":         "#1E90FF",      // Dodger blue for search engines
+    "CATEGORY_SELFDAMAGE":                          "#FF0000",      // Red for self-harm
+    "CATEGORY_SEX_EDUCATION":                       "#8B008B",      // Dark magenta for sex education
+    "CATEGORY_SEX_SHOPS":                           "#FF1493",      // Deep pink for sex shops
+    "CATEGORY_SOCIAL_NETS":                         "#008080",      // Teal for social networks
+    "CATEGORY_SOFTWARE_AUDIO_VIDEO":                "#1E90FF",      // Dodger blue for software/audio
+    "CATEGORY_SPAM":                                "#FFD700",      // Gold for spam
+    "CATEGORY_SPAMSITES":                           "#FF6347",      // Tomato red for spam sites
+    "CATEGORY_SPORT_AND_SPORT_GAMES":               "#32CD32",      // Lime green for sports
+    "CATEGORY_TOBACCO":                             "#8B4513",      // Saddle brown for tobacco
+    "CATEGORY_TORRENTS":                            "#4169E1",      // Royal blue for torrents
+    "CATEGORY_TOR_EXIT_NODE":                       "#8B008B",      // Dark magenta for Tor exit node
+    "CATEGORY_TOR_NODE":                            "#A9A9A9",      // Dark gray for Tor node
+    "CATEGORY_TRANSPORTATION":                      "#3CB371",      // Medium sea green for transportation
+    "CATEGORY_TRAVEL_TRIPS":                        "#FF6347",      // Tomato red for travel
+    "CATEGORY_TV_AND_RADIO":                        "#FFD700",      // Gold for TV/radio
+    "CATEGORY_UNCENSORED":                          "#B22222",      // Firebrick for uncensored
+    "CATEGORY_UNKNOWN":                             "#A9A9A9",      // Dark gray for unknown
+    "CATEGORY_VIOLENCE":                            "#8B0000",      // Dark red for violence
+    "CATEGORY_VPN":                                 "#4682B4",      // Steel blue for VPN
+    "CATEGORY_WEAPONS":                             "#B22222",      // Firebrick for weapons
+    "CATEGORY_WEB_BASED_EMAIL":                     "#32CD32",      // Lime green for web email
+    "CATEGORY__EMPTY":                              "#808080"       // Gray for empty
 };
+
+// Helper function to calculate brightness
+function calculateBrightness(hex: string): number {
+    // Convert hex to RGB
+    let r: number = parseInt(hex.slice(1, 3), 16);
+    let g: number = parseInt(hex.slice(3, 5), 16);
+    let b: number = parseInt(hex.slice(5, 7), 16);
+
+    // Apply the luminance formula
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Helper function to determine text color based on background color
+export const getTextColor = (backgroundColor: string): string => {
+    console.log(backgroundColor);
+    // Calculate brightness
+    const brightness = calculateBrightness(backgroundColor);
+    console.log(brightness);
+    // If brightness is greater than 128 (light background), return dark text (black), else white text
+    return brightness > 128 ? "#000000" : "#FFFFFF";
+}
+
+export const getCategoryLabel = (categoryCode: string, language: 'en' | 'ru'): string => {
+    return language === 'en' ? CategoryMapEN[categoryCode] : CategoryMapRU[categoryCode];
+};
+
+export const getCategoryColor = (categoryCode: string): string => {
+    return CategoryMapColor[categoryCode];
+}

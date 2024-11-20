@@ -1,36 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom'
 
-import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider } from '@mui/material/styles';
+import { darkTheme, lightTheme } from './lib/theme';
 
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { darkTheme, lightTheme } from './lib/theme';
 
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
-root.render(
-  <React.StrictMode>
-    <ThemeProvider theme={darkTheme}>
+const Main = () => {
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default theme is dark
+
+  // Function to toggle themes
+  const toggleTheme = () => {
+    setIsDarkMode(prevMode => !prevMode);
+  };
+
+  return (
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <CssBaseline />
       {/* ThemeProvider makes the theme available down the React tree thanks to React context. */}
       {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
       {/*initialEntries={['/', '/login', '/profile']}*/}
       {/*basename='/'*/}
-      <MemoryRouter
+      <MemoryRouter 
         future={{v7_startTransition: true}}
-        basename='/'
-        initialEntries={['/', '/about', '/contact']} initialIndex={0}
+        basename="/" 
+        initialEntries={['/', '/profile', '/login', '/settings']} 
+        initialIndex={0}
       >
-        <App />
+        <App toggleTheme={toggleTheme} />
       </MemoryRouter>
     </ThemeProvider>
+  );
+};
+
+root.render(
+  <React.StrictMode>
+    <Main />
   </React.StrictMode>
 );
 

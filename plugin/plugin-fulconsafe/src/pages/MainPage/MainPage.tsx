@@ -7,10 +7,11 @@ import SendIcon from '@mui/icons-material/Send';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import Face2RoundedIcon from '@mui/icons-material/Face2Rounded';
-// import CircularProgress from '@mui/material/CircularProgress';
 
-import Input from '../components/input/input';
-import InfoCard from '../components/card/card';
+import Input from '../../components/input/input';
+import InfoCard from '../../components/card/card';
+
+import './MainPage.css';
 
 const MAX_URL_LENGTH = 256;
 const API_URL_SCAN = 'http://90.156.219.248:8080/api/scan';
@@ -64,14 +65,6 @@ const MainPage: React.FC = () => {
       setLoading(false);
     }
   }
-  
-    const handleButtonClick = async () => {
-      if (!validateInput(URL)) {
-        setError('Введите корректный URL, IP-адрес или домен.');
-        setScanResult(null); // Clear previous result
-        return;
-      }
-    }
 
   // Handle file upload
   const handleFileUpload = async (file: File, url: string) => {
@@ -98,12 +91,17 @@ const MainPage: React.FC = () => {
     }
   };
 
-  // Drag-and-drop handlers
-  const handleDragLeave = () => setIsDragging(false);
+  // Drag-and-drop handlers with optimizations
+  const handleDragLeave = () => {
+    setIsDragging(false); // Only update when necessary
+  };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (!isDragging) setIsDragging(true);
+    // Only set isDragging when state changes
+    if (!isDragging) {
+      setIsDragging(true);
+    }
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -119,41 +117,24 @@ const MainPage: React.FC = () => {
 
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        flexDirection: 'column',
-        gap: '1rem',
-        border: isDragging ? '4px dashed #858585' : 'none',
-        backgroundColor: isDragging ? '#111111' : 'transparent',
-      }}
+      className={`drop-zone ${isDragging ? 'dragging' : ''}`}  // Apply CSS class for dragging state
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDragging && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', flexDirection: 'column' }}>
+        <div className="dragging-overlay">
           <Typography variant="h4" component="div"><strong>Drop</strong> file here to <strong>upload</strong></Typography>
         </div>
       )}
 
-      <div
-        style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          zIndex: 1000,
-          display: !isDragging ? 'inherit' : 'none',
-        }}
-      >
+      <div className="top-right-icons">
         <IconButton onClick={handleProfileButtonClick}><Face2RoundedIcon /></IconButton>
         <IconButton href="/settings"><SettingsIcon /></IconButton>
       </div>
 
-      <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: !isDragging ? 'inline-flex' : 'none', justifyContent: 'center' }}>
+      <div className="input-container">
+        <div className="input-row">
           <Input
             size="small"
             error={!!error}
@@ -164,7 +145,7 @@ const MainPage: React.FC = () => {
             style={{ height: '40px' }}
             onKeyDown={(e) => e.key === 'Enter' && handleScanRequest()}
           />
-          <IconButton color="primary" onClick={handleScanRequest}><SendIcon /></IconButton>
+          <IconButton color="primary" sx={{marginLeft: '1vh'}} onClick={handleScanRequest}><SendIcon /></IconButton>
           <IconButton color="primary" onClick={() => fileInputRef.current?.click()}>
             <AttachFileIcon />
             <input
@@ -176,9 +157,13 @@ const MainPage: React.FC = () => {
           </IconButton>
         </div>
 
-        {loading && <CircularProgress style={{ marginTop: '2rem' }} />}
+        {loading && (
+          <div className="loading-overlay">
+            <CircularProgress style={{ marginTop: '2rem' }} />
+          </div>
+        )}
 
-        <Collapse in={!!scanResult} timeout={500}>
+        <Collapse in={!!scanResult} timeout={1000} sx={{display: !(isDragging || loading) ? 'inherit' : 'none'}}>
           <div>{scanResult && <InfoCard scanResult={scanResult} />}</div>
         </Collapse>
       </div>

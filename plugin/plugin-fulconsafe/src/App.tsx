@@ -5,27 +5,30 @@ import ProtectedRoute from '../src/components/protectedRoutes/ProtectedRoutes';
 
 import './App.css';
 
-import MainPage from './pages/MainPage'
+import MainPage from './pages/MainPage/MainPage'
 import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/Settings';
 import { AuthProvider } from './context/AuthProvider';
 import LoginPage from './pages/LoginPage';
 
+type AppProps = {
+  toggleTheme?: () => void;
+};
 
-
-function App() {
+const App: React.FC<AppProps> = ({ toggleTheme }) => {
   return (
-    <AuthProvider>
-      <div className="App">
-        <Routes>
-          <Route path='/' element={ <MainPage/> }/>
-          <Route path='/settings'/>
-          
-          {/* Protected Route for /profile */}
-          <Route path="/profile" element={ <ProfilePage /> }/>
-          <Route path='/login' element={ <LoginPage/> }/>
-        </Routes>
-      </div>
-    </AuthProvider>
+      <AuthProvider>
+        <div className="App">
+          <Routes>
+            <Route path='/' element={ <MainPage/> }/>
+            <Route path='/settings' element={ <SettingsPage toggleTheme={toggleTheme} /> }/>
+
+            {/* Protected Route for /profile */}
+            <Route path="/profile" element={ <ProfilePage/> }/>
+            <Route path='/login' element={ <LoginPage/> }/>
+          </Routes>
+        </div>
+      </AuthProvider>
   );
 }
 
