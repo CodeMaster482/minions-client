@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'; 
 import { useNavigate } from 'react-router-dom';
 
 import { IconButton, Collapse, Typography, CircularProgress } from '@mui/material';
@@ -31,10 +31,8 @@ const MainPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleProfileButtonClick = () => {
-    window.open('/profile', '_blank');
     navigate('/profile');
   }
-    
 
   // URL validation
   const validateInput = (value: string) => 
@@ -95,16 +93,22 @@ const MainPage: React.FC = () => {
     }
   };
 
-  // Drag-and-drop handlers with optimizations
-  const handleDragLeave = () => {
-    setIsDragging(false); // Only update when necessary
-  };
-
+  // Обновленный обработчик handleDragOver
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    // Only set isDragging when state changes
+    event.stopPropagation();
     if (!isDragging) {
       setIsDragging(true);
+    }
+  };
+
+  // Обновленный обработчик handleDragLeave
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    // Проверяем, действительно ли курсор покинул зону перетаскивания
+    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+      setIsDragging(false);
     }
   };
 
@@ -119,10 +123,6 @@ const MainPage: React.FC = () => {
     if (file) handleFileUpload(file, url);
   };
 
-  const handleOpenProfilePage = () => {
-    window.open('/profile', '_blank'); // Open the profile page in a new tab
-  };
-
   return (
     <div
       className={`drop-zone ${isDragging ? 'dragging' : ''}`}  // Apply CSS class for dragging state
@@ -132,7 +132,7 @@ const MainPage: React.FC = () => {
     >
       {isDragging && (
         <div className="dragging-overlay">
-          <Typography variant="h4" component="div"><strong>Drop</strong> file here to <strong>upload</strong></Typography>
+          <Typography variant="h4" component="div"><strong>Перетащите</strong> файл сюда для <strong>загрузки</strong></Typography>
         </div>
       )}
 
@@ -148,7 +148,7 @@ const MainPage: React.FC = () => {
             error={!!error}
             helperText={error}
             type="text"
-            placeholder="IP, domain, URL..."
+            placeholder="IP, домен, URL..."
             onChange={(e) => setURL(e.target.value)}
             style={{ height: '40px' }}
             onKeyDown={(e) => e.key === 'Enter' && handleScanRequest()}
@@ -160,7 +160,17 @@ const MainPage: React.FC = () => {
               type="file"
               ref={fileInputRef}
               style={{ display: 'none' }}
-              onChange={(e) => e.target.files && handleFileUpload(e.target.files[0], API_URL_SCAN_FILE)}
+              onChange={(e) => {
+                if (e.target.files) {
+                  const file = e.target.files[0];
+                  const isImageFile =
+                    file.type === 'image/png' ||
+                    file.type === 'image/jpg' ||
+                    file.type === 'image/jpeg';
+                  const url = isImageFile ? `${API_URL_SCAN}/screen` : `${API_URL_SCAN_FILE}`;
+                  handleFileUpload(file, url);
+                }
+              }}
             />
           </IconButton>
         </div>

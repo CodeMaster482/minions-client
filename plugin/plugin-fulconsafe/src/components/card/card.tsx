@@ -186,9 +186,9 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
             </Box>
           )}
         </CardContent>
-        <CardActions>
+        {/* <CardActions>
           <Button size="small">Detailed View</Button>
-        </CardActions>
+        </CardActions> */}
       </Card>
     </Box>
   );
