@@ -19,11 +19,14 @@ type CustomCardProps = CardProps & {
       Ipv4Count?: number;
       HitsCount?: number;
     };
+    UrlDomainWhoIs?: {
+      DomainName?: string;
+    };
     UrlGeneralInfo?: {
       Url: string;
       Categories?: string[];
       FilesCount?: number;
-      Favicon?: string;  // Assuming we get a favicon here
+      Ipv4Count?: number;
     };
     FileGeneralInfo?: {
       FileStatus?: string;
@@ -62,24 +65,6 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
               ? 'Данная ссылка безопасна'
               : 'Нет точной информации'}
           </Typography>
-
-          {/* URL Preview Section */}
-          {scanResult.UrlGeneralInfo?.Url && (
-            <Box sx={{ margin: '1vh' }}>
-              <Typography variant="h6">Превью URL:</Typography>
-              {urlMeta ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '1vh' }}>
-                  <Avatar alt="Website Preview" src={urlMeta.image || scanResult.UrlGeneralInfo.Favicon || '/default-thumbnail.png'} sx={{ width: 56, height: 56 }} />
-                  <Box sx={{ ml: 2 }}>
-                    <Typography variant="subtitle1">{urlMeta.title}</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>{urlMeta.description}</Typography>
-                  </Box>
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary', marginTop: '1vh' }}>Загрузка данных...</Typography>
-              )}
-            </Box>
-          )}
 
           {/* IP General Info */}
           {scanResult.IpGeneralInfo && (
@@ -155,6 +140,48 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
               </Typography>
               <Typography variant="body2">
                 <strong>Количество обращений:</strong> {scanResult.DomainGeneralInfo.HitsCount || 0}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Domain General Info */}
+          {scanResult.UrlGeneralInfo && (
+            <Box sx={{ mt: 2, margin: '1vh' }}>
+              <Typography variant="h6">Информация о домене</Typography>
+              <Typography variant="body2">
+                <strong>Домен:</strong> {scanResult.UrlGeneralInfo.Url}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Категория:</strong>
+              </Typography>
+              <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {(scanResult.UrlGeneralInfo.Categories || []).map((category, index) => {
+                  const bgColor = getCategoryColor(category);
+                  const txtColor = getTextColor(bgColor);
+
+                  return (
+                    <Chip
+                      size="small"
+                      key={index}
+                      label={getCategoryLabel(category, 'en')}
+                      variant="filled"
+                      sx={{
+                        margin: '2px',
+                        backgroundColor: bgColor,
+                        color: txtColor,
+                      }}
+                    />
+                  );
+                })}
+              </Box>
+              <Typography variant="body2">
+                <strong>Количество файлов:</strong> {scanResult.UrlGeneralInfo.FilesCount || 0}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Количество IP:</strong> {scanResult.UrlGeneralInfo.Ipv4Count || 0}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Домен:</strong> {scanResult.UrlDomainWhoIs?.DomainName || 0}
               </Typography>
             </Box>
           )}

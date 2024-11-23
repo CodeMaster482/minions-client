@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import {
     FormControl,
     InputAdornment,
@@ -29,14 +28,14 @@ function AuthPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [password2, setPassword2] = useState(''); // For second password field in registration
-    const [showPassword, setShowPassword] = React.useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [isLogin, setIsLogin] = useState(true);  // Toggle between login and registration
     const [loading, setLoading] = useState(false);  // To manage loading state during authentication
     const [passwordError, setPasswordError] = useState(false); // Error state for password
     const [password2Error, setPassword2Error] = useState(false); // Error state for confirm password
     const [errorMessage, setErrorMessage] = useState(''); // General error message
 
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const handleClickShowPassword = () => setShowPassword(prevState => !prevState);
 
     const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -75,8 +74,8 @@ function AuthPage() {
         setErrorMessage('');
 
         const authData = {
-            username: username,
-            password: password
+            username,
+            password
         };
 
         const url = isLogin
@@ -93,7 +92,8 @@ function AuthPage() {
             });
 
             if (!response.ok) {
-                throw new Error(isLogin ? 'Login failed' : 'Registration failed');
+                const errorText = await response.text();
+                throw new Error(errorText || (isLogin ? 'Login failed' : 'Registration failed'));
             }
 
             const data = await response.json();
@@ -105,8 +105,9 @@ function AuthPage() {
             // Optionally redirect the user after successful login/registration
             navigate('/profile');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error during authentication:', error);
+            setErrorMessage(error.message || 'An error occurred. Please try again.');
         } finally {
             setLoading(false);  // Reset loading state after response
         }
@@ -133,10 +134,11 @@ function AuthPage() {
         >
             {/* Back Button in Top Left Corner */}
             <Box position="absolute" top={16} left={16}>
-                <IconButton onClick={handleNavigateBack}>
+                <IconButton onClick={handleNavigateBack} aria-label="back">
                     <ArrowBackIcon />
                 </IconButton>
             </Box>
+
             {/* Form Container */}
             <Box
                 display="flex"
@@ -158,7 +160,8 @@ function AuthPage() {
                 <Typography variant="h4" gutterBottom>
                     {isLogin ? 'Login' : 'Register'}
                 </Typography>
-                <FormControl sx={{ m: 0, width: '100%' }} variant="outlined" error={passwordError}>
+
+                <FormControl sx={{ mb: 1, width: '100%' }} variant="outlined" error={passwordError}>
                     {/* Username input */}
                     <InputLabel htmlFor="username">Username</InputLabel>
                     <Input
@@ -168,10 +171,11 @@ function AuthPage() {
                         onChange={(e) => setUsername(e.target.value)}
                         sx={{ mb: 2 }}
                         disabled={loading}
+                        aria-describedby="username-helper-text"
                     />
                 </FormControl>
 
-                <FormControl sx={{ m: 0, width: '100%' }} variant="outlined" error={passwordError}>
+                <FormControl sx={{ mb: 1, width: '100%' }} variant="outlined" error={passwordError}>
                     {/* Password input */}
                     <InputLabel htmlFor="password">Password</InputLabel>
                     <Input
@@ -194,13 +198,14 @@ function AuthPage() {
                         }
                         sx={{ mb: 2 }}
                         disabled={loading}
+                        aria-describedby="password-helper-text"
                     />
-                    {passwordError && <FormHelperText>{errorMessage}</FormHelperText>}
+                    {passwordError && <FormHelperText id="password-helper-text">{errorMessage}</FormHelperText>}
                 </FormControl>
 
                 {/* Conditionally render the second password field for registration */}
-                <Collapse in={!isLogin} timeout={500} sx={{width: '100%'}}> {/* Animation timeout */}
-                    <FormControl sx={{ m: 0, width: '100%' }} variant="outlined" error={password2Error}>
+                <Collapse in={!isLogin} timeout={500} sx={{ width: '100%' }}>
+                    <FormControl sx={{ mb: 1, width: '100%' }} variant="outlined" error={password2Error}>
                         <InputLabel htmlFor="password2">Confirm Password</InputLabel>
                         <Input
                             id="password2"
@@ -222,8 +227,9 @@ function AuthPage() {
                             }
                             sx={{ mb: 2 }}
                             disabled={loading}
+                            aria-describedby="password2-helper-text"
                         />
-                        {password2Error && <FormHelperText>{errorMessage}</FormHelperText>}
+                        {password2Error && <FormHelperText id="password2-helper-text">{errorMessage}</FormHelperText>}
                     </FormControl>
                 </Collapse>
 
@@ -233,6 +239,8 @@ function AuthPage() {
                     onClick={handleAuth}
                     sx={{ mb: 2 }}
                     disabled={loading}
+                    fullWidth
+                    aria-live="polite" // Notify screen readers of the status
                 >
                     {loading ? <CircularProgress size={24} color="inherit" /> : isLogin ? 'Login' : 'Register'}
                 </Button>

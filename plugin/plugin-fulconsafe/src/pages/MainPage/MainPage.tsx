@@ -30,7 +30,11 @@ const MainPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const handleProfileButtonClick = () => navigate('/profile');
+  const handleProfileButtonClick = () => {
+    window.open('/profile', '_blank');
+    navigate('/profile');
+  }
+    
 
   // URL validation
   const validateInput = (value: string) => 
@@ -113,6 +117,10 @@ const MainPage: React.FC = () => {
     const url = isImageFile ? `${API_URL_SCAN}/screen` : `${API_URL_SCAN_FILE}`;
     
     if (file) handleFileUpload(file, url);
+  };
+
+  const handleOpenProfilePage = () => {
+    window.open('/profile', '_blank'); // Open the profile page in a new tab
   };
 
   return (
