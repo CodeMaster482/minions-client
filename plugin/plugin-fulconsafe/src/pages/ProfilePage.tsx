@@ -15,7 +15,8 @@ function ProfilePage() {
   const [htmlContentRed, setHtmlContentRed] = useState('');         // State to hold the fetched red HTML content
   const [loading, setLoading] = useState(true);                     // Loading state for fetching
   const [timePeriod, setTimePeriod] = useState<string>('all-time'); // State for time period selection
-
+  const blob = new Blob([htmlContentGreen], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
   // Effect hook to handle authentication check and redirect to login if needed
   useEffect(() => {
     if (!isAuthenticated) {
@@ -166,10 +167,11 @@ function ProfilePage() {
           </Typography>
           <iframe
             title="Green Links HTML Content"
-            srcDoc={htmlContentGreen} // Inject fetched HTML content directly into the iframe
-            width="600px" // Makes the iframe take up 48% of the container width
+            src={url}
+            width="600px"
             height="640px"
-            style={{ border: 'none' }} // Optional styles
+            style={{ border: 'none' }}
+            onError={() => console.error('Ошибка загрузки данных в iframe')}
           />
         </div>
         
