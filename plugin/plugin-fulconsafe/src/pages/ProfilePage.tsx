@@ -9,11 +9,11 @@ const API_BASE_URL = 'http://90.156.219.248:8080/api/stat';
 const LOGOUT_API_URL = 'http://90.156.219.248:8080/api/auth/logout';
 
 function ProfilePage() {
-  const { isAuthenticated } = useAuth(); // Accessing authentication state and user data
-  const navigate = useNavigate(); // Using useNavigate for routing
-  const [htmlContentGreen, setHtmlContentGreen] = useState(''); // State to hold the fetched green HTML content
-  const [htmlContentRed, setHtmlContentRed] = useState(''); // State to hold the fetched red HTML content
-  const [loading, setLoading] = useState(true); // Loading state for fetching
+  const { isAuthenticated } = useAuth();                            // Accessing authentication state and user data
+  const navigate = useNavigate();                                   // Using useNavigate for routing
+  const [htmlContentGreen, setHtmlContentGreen] = useState('');     // State to hold the fetched green HTML content
+  const [htmlContentRed, setHtmlContentRed] = useState('');         // State to hold the fetched red HTML content
+  const [loading, setLoading] = useState(true);                     // Loading state for fetching
   const [timePeriod, setTimePeriod] = useState<string>('all-time'); // State for time period selection
 
   // Effect hook to handle authentication check and redirect to login if needed
