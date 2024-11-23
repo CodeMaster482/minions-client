@@ -364,10 +364,8 @@ function calculateBrightness(hex: string): number {
 
 // Helper function to determine text color based on background color
 export const getTextColor = (backgroundColor: string): string => {
-    console.log(backgroundColor);
     // Calculate brightness
     const brightness = calculateBrightness(backgroundColor);
-    console.log(brightness);
     // If brightness is greater than 128 (light background), return dark text (black), else white text
     return brightness > 128 ? "#000000" : "#FFFFFF";
 }

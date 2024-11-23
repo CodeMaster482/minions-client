@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                 // API returns { color: "red" }, etc.
                 let color;
-                switch (data.color) {
+                switch (data.Zone) {
                     case "Red":
                         color = 'red';
                         break;
@@ -62,22 +62,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 cachedLinks.set(domain, color);
                 saveToChromeStorageAPI(cachedLinks);
 
-                sendResponse({ color: color });
+                sendResponse({ color: data.Zone });
             } catch (error) {
                 console.error(`Error processing domain ${domain}:`, error);
-                sendResponse({ color: 'gray' });
+                sendResponse({ color: 'Gray' });
             }
         }
 
         // If the link is already cached, use the cached color
-        if (cachedLinks.has(linkDomain)) {
-            const cachedColor = cachedLinks.get(linkDomain);
-            console.log('Cache hit for: ', linkDomain, 'color:', cachedColor);
-            sendResponse({ color: cachedColor });
-        } else {
-            // Otherwise, fetch the color from the API
-            fetchColor(linkDomain);
-        }
+        // if (cachedLinks.has(linkDomain)) {
+        //     const cachedColor = cachedLinks.get(linkDomain);
+        //     console.log('Cache hit for: ', linkDomain, 'color:', cachedColor);
+        //     sendResponse({ color: cachedColor });
+        // } else {
+        //     // Otherwise, fetch the color from the API
+        //     fetchColor(linkDomain);
+        // }
+
+        fetchColor(linkDomain);
 
         // Return true to indicate that the response will be sent asynchronously
         return true;

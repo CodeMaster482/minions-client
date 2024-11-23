@@ -3,7 +3,9 @@ import { Box, Card, CardActions, CardContent, Button, Typography, Chip, Avatar }
 import { CardProps } from '@mui/material/Card';
 import { getCategoryLabel, getCategoryColor, getTextColor } from '../../lib/categoriesMap';
 
-const langRU = 'ru'
+import './card.css';
+
+const langRU = 'ru';
 
 type CustomCardProps = CardProps & {
   scanResult: {
@@ -46,17 +48,6 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
   { scanResult, ...props },
   ref,
 ) {
-  const [urlMeta, setUrlMeta] = useState<any>(null);
-
-  // Fetch metadata for the URL if available
-  useEffect(() => {
-    if (scanResult.UrlGeneralInfo?.Url) {
-      fetch(`https://api.linkpreview.net?key=yourAPIkey&q=${scanResult.UrlGeneralInfo.Url}`)
-        .then(res => res.json())
-        .then(data => setUrlMeta(data));
-    }
-  }, [scanResult.UrlGeneralInfo?.Url]);
-
   // Helper to determine safety status
   const getSafetyStatus = (zone: string) => {
     if (zone === 'Red') return { text: 'Опасно', color: 'error.main' };
@@ -67,7 +58,7 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
   const safetyStatus = getSafetyStatus(scanResult.Zone);
 
   return (
-    <Box sx={{ minWidth: 400, margin: '1.5vh' }}>
+    <Box sx={{ minWidth: 400, margin: '1.5vh', maxWidth: 500 }}>
       <Card variant="outlined" {...props} ref={ref} sx={{ margin: '1vh', borderColor: safetyStatus.color }}>
         <CardContent sx={{ display: 'contents' }}>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14, margin: '1vh' }}>
@@ -119,7 +110,7 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
             <Box sx={{ mt: 2, margin: '1vh' }}>
               <Typography variant="h6">Информация о домене</Typography>
               <Typography variant="body2">
-                <strong>Домен:</strong> {scanResult.DomainGeneralInfo.Domain}
+                <strong>Домен:</strong><span className="truncate-text">{scanResult.DomainGeneralInfo.Domain}</span>
               </Typography>
               <Typography variant="body2">
                 <strong>Категория:</strong>
@@ -159,9 +150,9 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
           {/* URL General Info */}
           {scanResult.UrlGeneralInfo && (
             <Box sx={{ mt: 2, margin: '1vh' }}>
-              <Typography variant="h6">Информация о домене</Typography>
+              <Typography variant="h6">Информация о Ссылке</Typography>
               <Typography variant="body2">
-                <strong>Домен:</strong> {scanResult.UrlGeneralInfo.Url}
+                <strong>URL:</strong> <span className="truncate-text">{scanResult.UrlGeneralInfo?.Url}</span>
               </Typography>
               <Typography variant="body2">
                 <strong>Категория:</strong>
