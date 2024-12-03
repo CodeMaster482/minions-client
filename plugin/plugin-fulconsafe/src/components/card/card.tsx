@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Card, CardActions, CardContent, Button, Typography, Chip, Avatar } from '@mui/material';
+import { Box, Card, CardContent, Typography, Chip } from '@mui/material';
 import { CardProps } from '@mui/material/Card';
 import { getCategoryLabel, getCategoryColor, getTextColor } from '../../lib/categoriesMap';
 
@@ -7,63 +7,110 @@ import './card.css';
 
 const langRU = 'ru';
 
+
+type IpGeneralInfo = {
+  Ip: string;
+  Categories?: string[];
+  CountryCode?: string;
+};
+
+type DomainGeneralInfo = {
+  Domain: string;
+  Categories?: string[];
+  FilesCount?: number;
+  Ipv4Count?: number;
+  HitsCount?: number;
+};
+
+type UrlDomainWhoIs = {
+  DomainName?: string;
+};
+
+type UrlGeneralInfo = {
+  Url: string;
+  Categories?: string[];
+  FilesCount?: number;
+  Ipv4Count?: number;
+  Host?: string;
+};
+
+type FileGeneralInfo = {
+  FileStatus?: string;
+  Size?: number;
+  Sha1?: string;
+  Md5?: string;
+  Sha256?: string;
+  HitsCount?: string;
+  FirstSeen?: string;
+  LastSeen?: string;
+};
+
+type ScanResult = {
+  Zone: string;
+  IpGeneralInfo?: IpGeneralInfo;
+  DomainGeneralInfo?: DomainGeneralInfo;
+  UrlDomainWhoIs?: UrlDomainWhoIs;
+  UrlGeneralInfo?: UrlGeneralInfo;
+  FileGeneralInfo?: FileGeneralInfo;
+};
+
 type CustomCardProps = CardProps & {
-  scanResult: {
-    Zone: string;
-    IpGeneralInfo?: {
-      Ip: string;
-      Categories?: string[];
-      CountryCode?: string;
-    };
-    DomainGeneralInfo?: {
-      Domain: string;
-      Categories?: string[];
-      FilesCount?: number;
-      Ipv4Count?: number;
-      HitsCount?: number;
-    };
-    UrlDomainWhoIs?: {
-      DomainName?: string;
-    };
-    UrlGeneralInfo?: {
-      Url: string;
-      Categories?: string[];
-      FilesCount?: number;
-      Ipv4Count?: number;
-    };
-    FileGeneralInfo?: {
-      FileStatus?: string;
-      Size?: number;
-      Sha1?: string;
-      Md5?: string;
-      Sha256?: string;
-      HitsCount?: string;
-      FirstSeen?: string;
-      LastSeen?: string;
-    };
-  };
+  scanResult: ScanResult | { [key: string]: ScanResult };
 };
 
 const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function InfoCard(
   { scanResult, ...props },
   ref,
 ) {
-  // Helper to determine safety status
-  const getSafetyStatus = (zone: string) => {
-    if (zone === 'Red') return { text: 'Опасно', color: 'error.main' };
-    if (zone === 'Green') return { text: 'Безопасно', color: 'success.main' };
-    return { text: 'Неизвестно', color: 'grey.500' };
-  };
+  // Нормализация данных
+  let scanResultsArray: ScanResult[] = [];
 
-  const safetyStatus = getSafetyStatus(scanResult.Zone);
+  if (scanResult && typeof scanResult === 'object') {
+    if ('Zone' in scanResult || 'FileGeneralInfo' in scanResult) {
+      // scanResult - это единичный объект результата
+      scanResultsArray = [scanResult as ScanResult];
+    } else {
+      // scanResult содержит ключи вроде 'additionalProp1'
+      scanResultsArray = Object.values(scanResult);
+    }
+  }
 
   return (
-    <Box sx={{ minWidth: 400, margin: '1.5vh', maxWidth: 500 }}>
+    <Box sx={{ minWidth: 400, margin: '1.5vh' }}>
+      {scanResultsArray.map((singleResult, index) => (
+        <SingleInfoCard key={index} scanResult={singleResult} {...props} />
+      ))}
+    </Box>
+  );
+});
+
+const SingleInfoCard = React.forwardRef<HTMLDivElement, { scanResult: ScanResult } & CardProps>(
+  function SingleInfoCard({ scanResult, ...props }, ref) {
+    const [urlMeta, setUrlMeta] = useState<any>(null);
+
+    // Получение метаданных для URL, если доступно
+    useEffect(() => {
+      if (scanResult.UrlGeneralInfo?.Url) {
+        fetch(`https://api.linkpreview.net?key=yourAPIkey&q=${scanResult.UrlGeneralInfo.Url}`)
+          .then(res => res.json())
+          .then(data => setUrlMeta(data));
+      }
+    }, [scanResult.UrlGeneralInfo?.Url]);
+
+    // Определение статуса безопасности
+    const getSafetyStatus = (zone: string) => {
+      if (zone === 'Red') return { text: 'Опасно', color: 'error.main' };
+      if (zone === 'Green') return { text: 'Безопасно', color: 'success.main' };
+      return { text: 'Неизвестно', color: 'grey.500' };
+    };
+
+    const safetyStatus = getSafetyStatus(scanResult.Zone);
+
+    return (
       <Card variant="outlined" {...props} ref={ref} sx={{ margin: '1vh', borderColor: safetyStatus.color }}>
         <CardContent sx={{ display: 'contents' }}>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14, margin: '1vh' }}>
-            {scanResult.UrlGeneralInfo?.Url}
-            {scanResult.FileGeneralInfo?.FileStatus}
+            {scanResult.UrlGeneralInfo?.Url || scanResult.FileGeneralInfo?.FileStatus || 'Результат сканирования'}
           </Typography>
           <Typography variant="h5" component="div" sx={{ margin: '1vh', color: safetyStatus.color }}>
             {safetyStatus.text}
@@ -108,11 +155,11 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
           {/* Domain General Info */}
           {scanResult.DomainGeneralInfo && (
             <Box sx={{ mt: 2, margin: '1vh' }}>
-              <Typography variant="h6">Информация о домене</Typography>
-              <Typography variant="body2">
-                <strong>Домен:</strong><span className="truncate-text">{scanResult.DomainGeneralInfo.Domain}</span>
+              <Typography variant="h6" sx={{ margin: '1vh' }}>Информация о домене</Typography>
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>Домен:</strong> {scanResult.DomainGeneralInfo.Domain}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Категория:</strong>
               </Typography>
               <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -135,13 +182,13 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
                   );
                 })}
               </Box>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Количество файлов:</strong> {scanResult.DomainGeneralInfo.FilesCount || 0}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Количество IP:</strong> {scanResult.DomainGeneralInfo.Ipv4Count || 0}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Количество обращений:</strong> {scanResult.DomainGeneralInfo.HitsCount || 0}
               </Typography>
             </Box>
@@ -150,11 +197,11 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
           {/* URL General Info */}
           {scanResult.UrlGeneralInfo && (
             <Box sx={{ mt: 2, margin: '1vh' }}>
-              <Typography variant="h6">Информация о Ссылке</Typography>
-              <Typography variant="body2">
-                <strong>URL:</strong> <span className="truncate-text">{scanResult.UrlGeneralInfo?.Url}</span>
+              <Typography variant="h6" sx={{ margin: '1vh' }}>Информация об URL</Typography>
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>URL:</strong> {scanResult.UrlGeneralInfo.Url}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Категория:</strong>
               </Typography>
               <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -177,14 +224,14 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
                   );
                 })}
               </Box>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Количество файлов:</strong> {scanResult.UrlGeneralInfo.FilesCount || 0}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Количество IP:</strong> {scanResult.UrlGeneralInfo.Ipv4Count || 0}
               </Typography>
-              <Typography variant="body2">
-                <strong>Домен:</strong> {scanResult.UrlDomainWhoIs?.DomainName || 0}
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>Хост:</strong> {scanResult.UrlGeneralInfo.Host || 'нет данных'}
               </Typography>
             </Box>
           )}
@@ -192,34 +239,37 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
           {/* File General Info */}
           {scanResult.FileGeneralInfo && (
             <Box sx={{ mt: 2, margin: '1vh' }}>
-              <Typography variant="h6">Информация о файле</Typography>
-              <Typography variant="body2">
-                <strong>Статус:</strong> {scanResult.FileGeneralInfo.FileStatus || 'Не определено'}
+              <Typography variant="h6" sx={{ margin: '1vh' }}>Информация о файле</Typography>
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>Статус файла:</strong> {scanResult.FileGeneralInfo.FileStatus || 'Не определено'}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>SHA1:</strong> {scanResult.FileGeneralInfo.Sha1 || 'Не определено'}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>MD5:</strong> {scanResult.FileGeneralInfo.Md5 || 'Не определено'}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>SHA256:</strong> {scanResult.FileGeneralInfo.Sha256 || 'Не определено'}
+              </Typography>
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Размер файла:</strong> {scanResult.FileGeneralInfo.Size || 0} байт
               </Typography>
-              <Typography variant="body2">
-                <strong>Количество проверок:</strong> {scanResult.FileGeneralInfo.HitsCount || 0}
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
+                <strong>Количество обращений:</strong> {scanResult.FileGeneralInfo.HitsCount || 0}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Первое обнаружение:</strong> {scanResult.FileGeneralInfo.FirstSeen || 'Не указано'}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ margin: '1vh' }}>
                 <strong>Последнее обнаружение:</strong> {scanResult.FileGeneralInfo.LastSeen || 'Не указано'}
               </Typography>
             </Box>
           )}
         </CardContent>
       </Card>
-    </Box>
-  );
-});
+    );
+  }
+);
 
 export default InfoCard;
