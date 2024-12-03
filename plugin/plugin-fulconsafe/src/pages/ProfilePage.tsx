@@ -1,93 +1,89 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Typography, Box, IconButton } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // For navigation
-import { useAuth } from '../context/AuthProvider'; // Custom authentication hook
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // ArrowBackIcon for the button
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthProvider';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+// Register chart components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 // URLs for API endpoints
-const API_BASE_URL = 'http://90.156.219.248:8080/api/stat';
+const API_BASE_URL = 'http://90.156.219.248:8080/api/v2/stat';
 const LOGOUT_API_URL = 'http://90.156.219.248:8080/api/auth/logout';
 
 function ProfilePage() {
-  const { isAuthenticated } = useAuth();                            // Accessing authentication state and user data
-  const navigate = useNavigate();                                   // Using useNavigate for routing
-  const [htmlContentGreen, setHtmlContentGreen] = useState('');     // State to hold the fetched green HTML content
-  const [htmlContentRed, setHtmlContentRed] = useState('');         // State to hold the fetched red HTML content
-  const [loading, setLoading] = useState(true);                     // Loading state for fetching
-  const [timePeriod, setTimePeriod] = useState<string>('all-time'); // State for time period selection
-  const blob = new Blob([htmlContentGreen], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  // Effect hook to handle authentication check and redirect to login if needed
+  const { isAuthenticated, logout } = useAuth(); // Destructure logout from useAuth
+  const navigate = useNavigate();
+  const [greenLinksData, setGreenLinksData] = useState([]);
+  const [redLinksData, setRedLinksData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState('all-time');
+
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login'); // Redirect to login if not authenticated
+      navigate('/login');
     }
   }, [isAuthenticated, navigate]);
 
-  // Effect hook to fetch data based on selected time period
   useEffect(() => {
-    const fetchHtmlContent = async () => {
-      setLoading(true); // Set loading to true when fetching data
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        // Build the API endpoint based on the selected time period
         let apiUrlGreen = '';
         let apiUrlRed = '';
         switch (timePeriod) {
           case 'month':
-            apiUrlGreen = `${API_BASE_URL}/top-green-links-month`; // Fetch data for the month
+            apiUrlGreen = `${API_BASE_URL}/top-green-links-month`;
             apiUrlRed = `${API_BASE_URL}/top-red-links-month`;
             break;
           case 'week':
-            apiUrlGreen = `${API_BASE_URL}/top-green-links-week`; // Fetch data for the week
+            apiUrlGreen = `${API_BASE_URL}/top-green-links-week`;
             apiUrlRed = `${API_BASE_URL}/top-red-links-week`;
             break;
           case 'all-time':
-            apiUrlGreen = `${API_BASE_URL}/top-green-links-all-time`; // Fetch data for all time
-            apiUrlRed = `${API_BASE_URL}/top-red-links-all-time`;
-            break;
           default:
             apiUrlGreen = `${API_BASE_URL}/top-green-links-all-time`;
             apiUrlRed = `${API_BASE_URL}/top-red-links-all-time`;
+            break;
         }
 
         // Fetch green links data
         const responseGreen = await fetch(apiUrlGreen);
         if (responseGreen.ok) {
-          const dataGreen = await responseGreen.text(); // Get the HTML response for green links
-          setHtmlContentGreen(dataGreen); // Set the green HTML content in state
+          const dataGreen = await responseGreen.json();
+          setGreenLinksData(dataGreen);
         } else {
-          console.error('Failed to fetch green HTML content');
+          console.error('Failed to fetch green links data');
         }
 
         // Fetch red links data
         const responseRed = await fetch(apiUrlRed);
         if (responseRed.ok) {
-          const dataRed = await responseRed.text(); // Get the HTML response for red links
-          setHtmlContentRed(dataRed); // Set the red HTML content in state
+          const dataRed = await responseRed.json();
+          setRedLinksData(dataRed);
         } else {
-          console.error('Failed to fetch red HTML content');
+          console.error('Failed to fetch red links data');
         }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false); // Set loading to false once fetch is complete
+        setLoading(false);
       }
     };
 
-    fetchHtmlContent();
-  }, [timePeriod]); // Dependency array includes 'timePeriod' to refetch data when it changes
+    fetchData();
+  }, [timePeriod]);
 
-  // Handle the button clicks for selecting the time period
-  const handleTimePeriodChange = (period: string) => {
-    setTimePeriod(period); // Update the selected time period
+  const handleTimePeriodChange = (period:any) => {
+    setTimePeriod(period);
   };
 
-  // Handle back navigation
   const handleNavigateBack = () => {
-    navigate('/'); // Navigate back to the previous page
+    navigate('/');
   };
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       const response = await fetch(LOGOUT_API_URL, {
@@ -98,7 +94,9 @@ function ProfilePage() {
       });
 
       if (response.ok) {
-        navigate('/login'); // Redirect to login page
+        logout(); // Update authentication state
+        localStorage.removeItem('session_id'); // Clear session token
+        navigate('/login');
       } else {
         console.error('Logout failed');
       }
@@ -108,86 +106,170 @@ function ProfilePage() {
   };
 
   if (!isAuthenticated) {
-    return null; // Optionally return null until the redirect happens
+    return null;
   }
 
   if (loading) {
-    return <div>Loading...</div>; // Render loading state while fetching
+    return <div>Loading...</div>;
   }
 
+  // Function to prepare data for the pie chart
+  const prepareChartData = (data:any) => {
+    return {
+      labels: data.map((item:any) =>
+        item.request.length > 20 ? item.request.substring(0, 20) + '...' : item.request
+      ),
+      datasets: [
+        {
+          data: data.map((item:any) => item.access_count),
+          backgroundColor: [
+            '#FF6384',
+            '#36A2EB',
+            '#FFCE56',
+            '#4BC0C0',
+            '#9966FF',
+            '#FF9F40',
+          ],
+          hoverBackgroundColor: [
+            '#FF6384',
+            '#36A2EB',
+            '#FFCE56',
+            '#4BC0C0',
+            '#9966FF',
+            '#FF9F40',
+          ],
+        },
+      ],
+    };
+  };
+
+  // Function to render pie charts
+  const renderPieChart = (data:any, title:any) => {
+    // Check if there is data to display
+    const filteredData = data.filter((item:any) => item.request !== 'N/A');
+    const hasData = filteredData.length > 0;
+
+    if (!hasData) {
+      return (
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ marginBottom: '10px', fontSize: '16px' }}>
+            {title}
+          </Typography>
+          <Typography variant="body1">No data to display</Typography>
+        </div>
+      );
+    }
+
+    // Continue rendering the chart if data is available
+    return (
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <Typography variant="h6" style={{ marginBottom: '10px', fontSize: '16px' }}>
+          {title}
+        </Typography>
+        <div style={{ width: '100%', height: '250px' }}>
+          <Pie
+            data={prepareChartData(filteredData)}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false, // Hide legend to save space
+                },
+                tooltip: {
+                  enabled: true,
+                  callbacks: {
+                    label: (context) => {
+                      const label = filteredData[context.dataIndex].request;
+                      const count = filteredData[context.dataIndex].access_count;
+                      return `${label}: ${count}`;
+                    },
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div>
-      {/* Back Button in Top Left Corner */}
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+        boxSizing: 'border-box',
+        padding: '10px',
+      }}
+    >
+      {/* Back Button */}
       <Box position="absolute" top={16} left={16}>
-        <IconButton onClick={handleNavigateBack} aria-label="back">
-          <ArrowBackIcon />
+        <IconButton onClick={handleNavigateBack} aria-label="back" size="small">
+          <ArrowBackIcon fontSize="small" />
         </IconButton>
       </Box>
 
-      <Typography 
-        variant="h5" 
-        component="div" 
-        style={{ 
-          marginTop: '10vh',
-          marginLeft: '10vh' 
+      {/* Logout Button */}
+      <Box position="absolute" top={16} right={16}>
+        <Button onClick={handleLogout} variant="contained" size="small">
+          Logout
+        </Button>
+      </Box>
+
+      <Typography
+        variant="h5"
+        component="div"
+        style={{
+          marginTop: '50px',
+          textAlign: 'center',
+          fontSize: '18px',
         }}
       >
         Статистика
       </Typography>
 
-      {/* Buttons for selecting time period */}
-      <div style={{ marginTop: '20px', marginLeft: '10vh' }}>
-        <Button 
-          variant="contained" 
-          onClick={() => handleTimePeriodChange('all-time')} 
-          style={{ marginRight: '1vh' }}
+      {/* Time Period Buttons */}
+      <div
+        style={{
+          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <Button
+          variant="contained"
+          onClick={() => handleTimePeriodChange('all-time')}
+          style={{ marginRight: '5px', fontSize: '12px' }}
         >
           All Time
         </Button>
-        <Button variant="contained" onClick={() => handleTimePeriodChange('month')} style={{ marginRight: '1vh' }}>
+        <Button
+          variant="contained"
+          onClick={() => handleTimePeriodChange('month')}
+          style={{ marginRight: '5px', fontSize: '12px' }}
+        >
           This Month
         </Button>
-        <Button variant="contained" onClick={() => handleTimePeriodChange('week')} style={{ marginRight: '1vh' }}>
+        <Button
+          variant="contained"
+          onClick={() => handleTimePeriodChange('week')}
+          style={{ fontSize: '12px' }}
+        >
           This Week
         </Button>
       </div>
 
-      {/* Flexbox container for iframes */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        marginTop: '20px', 
-        marginLeft: '10vh', 
-        marginRight: '10vh' 
-      }}>
-        {/* Green Links Typography Label */}
-        <div style={{ textAlign: 'center', marginRight: '20px' }}>
-          <Typography variant="h6" style={{ marginBottom: '10px' }}>
-            Green Links
-          </Typography>
-          <iframe
-            title="Green Links HTML Content"
-            src={url}
-            width="600px"
-            height="640px"
-            style={{ border: 'none' }}
-            onError={() => console.error('Ошибка загрузки данных в iframe')}
-          />
-        </div>
-        
-        {/* Red Links Typography Label */}
-        <div style={{ textAlign: 'center' }}>
-          <Typography variant="h6" style={{ marginBottom: '10px' }}>
-            Red Links
-          </Typography>
-          <iframe
-            title="Red Links HTML Content"
-            srcDoc={htmlContentRed} // Inject fetched HTML content directly into the iframe
-            width="600px" // Makes the iframe take up 48% of the container width
-            height="650px"
-            style={{ border: 'none' }} // Optional styles
-          />
-        </div>
+      {/* Pie Charts */}
+      <div
+        style={{
+          marginTop: '20px',
+          padding: '0 10px',
+        }}
+      >
+        {renderPieChart(greenLinksData, 'Green Links')}
+        {renderPieChart(redLinksData, 'Red Links')}
       </div>
     </div>
   );

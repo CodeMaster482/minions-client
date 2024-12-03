@@ -31,8 +31,12 @@ function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLogin, setIsLogin] = useState(true);  // Toggle between login and registration
     const [loading, setLoading] = useState(false);  // To manage loading state during authentication
+
+    // Error states
+    const [usernameError, setUsernameError] = useState(false);
     const [passwordError, setPasswordError] = useState(false); // Error state for password
     const [password2Error, setPassword2Error] = useState(false); // Error state for confirm password
+    const [generalError, setGeneralError] = useState(false); // General error state
     const [errorMessage, setErrorMessage] = useState(''); // General error message
 
     const handleClickShowPassword = () => setShowPassword(prevState => !prevState);
@@ -50,9 +54,24 @@ function AuthPage() {
 
         setLoading(true);
 
-        // Basic validation: Password must be at least 6 characters long
+        // Reset error states
+        setUsernameError(false);
+        setPasswordError(false);
+        setPassword2Error(false);
+        setGeneralError(false);
+        setErrorMessage('');
+
+        // Basic validation
+        const isUsernameValid = username.trim().length > 0;
         const isPasswordValid = password.length >= 6;
         const doPasswordsMatch = password === password2;
+
+        if (!isUsernameValid) {
+            setUsernameError(true);
+            setErrorMessage('Username is required');
+            setLoading(false);
+            return;
+        }
 
         if (!isPasswordValid) {
             setPasswordError(true);
@@ -67,11 +86,6 @@ function AuthPage() {
             setLoading(false);
             return;
         }
-
-        // Clear any existing error messages
-        setPasswordError(false);
-        setPassword2Error(false);
-        setErrorMessage('');
 
         const authData = {
             username,
@@ -92,8 +106,18 @@ function AuthPage() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || (isLogin ? 'Login failed' : 'Registration failed'));
+                const contentType = response.headers.get('content-type');
+                let errorText = '';
+
+                if (contentType && contentType.indexOf('application/json') !== -1) {
+                    const errorData = await response.json();
+                    errorText = errorData.message || (isLogin ? 'Login failed' : 'Registration failed');
+                } else {
+                    errorText = await response.text();
+                    errorText = errorText || (isLogin ? 'Login failed' : 'Registration failed');
+                }
+
+                throw new Error(errorText);
             }
 
             const data = await response.json();
@@ -107,6 +131,7 @@ function AuthPage() {
 
         } catch (error: any) {
             console.error('Error during authentication:', error);
+            setGeneralError(true);
             setErrorMessage(error.message || 'An error occurred. Please try again.');
         } finally {
             setLoading(false);  // Reset loading state after response
@@ -161,7 +186,7 @@ function AuthPage() {
                     {isLogin ? 'Login' : 'Register'}
                 </Typography>
 
-                <FormControl sx={{ mb: 1, width: '100%' }} variant="outlined" error={passwordError}>
+                <FormControl sx={{ mb: 1, width: '100%' }} variant="outlined" error={usernameError}>
                     {/* Username input */}
                     <InputLabel htmlFor="username">Username</InputLabel>
                     <Input
@@ -173,6 +198,7 @@ function AuthPage() {
                         disabled={loading}
                         aria-describedby="username-helper-text"
                     />
+                    {usernameError && <FormHelperText id="username-helper-text">{errorMessage}</FormHelperText>}
                 </FormControl>
 
                 <FormControl sx={{ mb: 1, width: '100%' }} variant="outlined" error={passwordError}>
@@ -245,6 +271,13 @@ function AuthPage() {
                     {loading ? <CircularProgress size={24} color="inherit" /> : isLogin ? 'Login' : 'Register'}
                 </Button>
 
+                {/* Display general error messages */}
+                {generalError && (
+                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                        {errorMessage}
+                    </Typography>
+                )}
+
                 <Box mt={2} alignSelf="start">
                     <Typography variant="body2">
                         {isLogin
@@ -253,7 +286,18 @@ function AuthPage() {
                         <Button
                             variant="text"
                             color="primary"
-                            onClick={() => setIsLogin(!isLogin)}
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                                // Reset errors and fields when toggling
+                                setUsername('');
+                                setPassword('');
+                                setPassword2('');
+                                setUsernameError(false);
+                                setPasswordError(false);
+                                setPassword2Error(false);
+                                setGeneralError(false);
+                                setErrorMessage('');
+                            }}
                             sx={{ textTransform: 'none', marginLeft: 1 }}
                             disabled={loading}
                         >
