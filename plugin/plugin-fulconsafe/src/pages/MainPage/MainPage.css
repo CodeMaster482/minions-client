@@ -52,3 +52,42 @@
   z-index: 1000;
   background-color: rgba(0, 0, 0, 0.5)
 }
+
+/* Add smooth transitions for theme changes */
+.drop-zone {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Add smooth transitions for the drawer */
+.MuiDrawer-paper {
+  transition: transform 0.3s ease;
+}
+
+.settings-toggle {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.dragging-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  z-index: 999;
+}

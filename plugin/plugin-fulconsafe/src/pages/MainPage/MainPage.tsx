@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from 'react'; 
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { 
-  IconButton, 
-  Collapse, 
-  Typography, 
-  CircularProgress, 
-  Drawer, 
-  Button, 
-  Switch 
+import {
+  IconButton,
+  Collapse,
+  Typography,
+  CircularProgress,
+  Drawer,
+  Switch,
+  Tooltip,
 } from '@mui/material';
 
 import SendIcon from '@mui/icons-material/Send';
@@ -30,17 +30,21 @@ const URL_PATTERN = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}([\/\w \.-]*)*
 const IP_PATTERN = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/;
 const DOMAIN_PATTERN = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 
-const MainPage: React.FC = () => {
+interface MainPageProps {
+  toggleTheme: any;
+}
+
+const MainPage: React.FC<MainPageProps> = ({ toggleTheme }) => {
   const [URL, setURL] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [open, setOpen] = useState(false);
-  
-  const [showGrayLinks, setShowGrayLinks] = useState(false);  // State for gray links
-  const [showGreenLinks, setShowGreenLinks] = useState(false);  // State for green links
-  const [isDarkTheme, setIsDarkTheme] = useState(false); // Dark theme state
+
+  const [showGrayLinks, setShowGrayLinks] = useState<boolean>(false);
+  const [showGreenLinks, setShowGreenLinks] = useState<boolean>(false);
+  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -53,11 +57,36 @@ const MainPage: React.FC = () => {
     navigate('/profile');
   };
 
-  // Валидация URL
+  // Load persistent settings from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('isDarkTheme');
+    if (savedTheme) {
+      setIsDarkTheme(JSON.parse(savedTheme));
+    }
+
+    const savedGrayLinks = localStorage.getItem('showGrayLinks');
+    if (savedGrayLinks) {
+      setShowGrayLinks(JSON.parse(savedGrayLinks));
+    }
+
+    const savedGreenLinks = localStorage.getItem('showGreenLinks');
+    if (savedGreenLinks) {
+      setShowGreenLinks(JSON.parse(savedGreenLinks));
+    }
+  }, []);
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('isDarkTheme', JSON.stringify(isDarkTheme));
+    localStorage.setItem('showGrayLinks', JSON.stringify(showGrayLinks));
+    localStorage.setItem('showGreenLinks', JSON.stringify(showGreenLinks));
+  }, [isDarkTheme, showGrayLinks, showGreenLinks]);
+
+  // Validate URL
   const validateInput = (value: string) =>
     URL_PATTERN.test(value) || IP_PATTERN.test(value) || DOMAIN_PATTERN.test(value);
 
-  // Обработчик запроса сканирования URL
+  // Handle scan request
   const handleScanRequest = async () => {
     if (!validateInput(URL)) {
       setError('Введите корректный URL, IP-адрес или домен.');
@@ -79,7 +108,6 @@ const MainPage: React.FC = () => {
       setError(null);
     } catch (err: any) {
       console.error(`Error: request failed: `, err);
-
       setError(err.message);
       setScanResult(null);
     } finally {
@@ -87,7 +115,7 @@ const MainPage: React.FC = () => {
     }
   };
 
-  // Обработчик загрузки файла
+  // Handle file upload
   const handleFileUpload = async (file: File, url: string) => {
     setLoading(true);
     const formData = new FormData();
@@ -101,6 +129,7 @@ const MainPage: React.FC = () => {
 
       if (!response.ok) throw new Error(`Error: ${response.status}`);
       const data = await response.json();
+      data.FileName = file.name;
       setScanResult(data);
       setError(null);
     } catch (err: any) {
@@ -112,7 +141,7 @@ const MainPage: React.FC = () => {
     }
   };
 
-  // Обновленные обработчики drag-and-drop
+  // Drag-and-drop handlers
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -124,7 +153,6 @@ const MainPage: React.FC = () => {
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    // Проверяем, действительно ли курсор покинул зону перетаскивания
     if (!event.currentTarget.contains(event.relatedTarget as Node)) {
       setIsDragging(false);
     }
@@ -146,6 +174,7 @@ const MainPage: React.FC = () => {
 
   const handleThemeChange = () => {
     setIsDarkTheme((prevTheme) => !prevTheme);
+    toggleTheme();
   }
 
   return (
@@ -157,14 +186,17 @@ const MainPage: React.FC = () => {
     >
       {isDragging && (
         <div className="dragging-overlay">
-          <Typography variant="h4" component="div"><strong>Бросте</strong> файл в окно для <strong>проверки</strong></Typography>
+          <Typography variant="h4" component="div" sx={{m: '4vh'}}><strong>Бросте</strong> файл в окно для <strong>проверки</strong></Typography>
         </div>
       )}
 
-      <div className="top-right-icons">
-        <IconButton onClick={handleProfileButtonClick}><Face2RoundedIcon /></IconButton>
-        <IconButton onClick={toggleDrawer(true)}><SettingsIcon /></IconButton>
-      </div>
+      {!isDragging && (
+        <div className="top-right-icons">
+          <IconButton onClick={handleProfileButtonClick}><Face2RoundedIcon/></IconButton>
+          <IconButton onClick={toggleDrawer(true)}><SettingsIcon/></IconButton>
+        </div>
+      )}
+
       <div className="input-container">
         {!isDragging && (
           <div className="input-row">
@@ -179,7 +211,7 @@ const MainPage: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && handleScanRequest()}
               autoComplete="off"
             />
-            <IconButton color="primary" sx={{marginLeft: '1vh'}} onClick={handleScanRequest}><SendIcon /></IconButton>
+            <IconButton color="primary" sx={{ marginLeft: '1vh' }} onClick={handleScanRequest}><SendIcon /></IconButton>
             <IconButton color="primary" onClick={() => fileInputRef.current?.click()}>
               <AttachFileIcon />
               <input
@@ -207,22 +239,43 @@ const MainPage: React.FC = () => {
             <CircularProgress style={{ marginTop: '2rem' }} />
           </div>
         )}
+
         <Collapse in={!!scanResult && !(isDragging || loading)} timeout={1000}>
-          <div>{scanResult && <InfoCard scanResult={scanResult} />}</div>
+          <div style={{display: 'grid'}}>{scanResult && <InfoCard scanResult={scanResult} />}</div>
         </Collapse>
       </div>
-      <Drawer open={open} onClose={toggleDrawer(false)} anchor='right'>
-        <Button onClick={() => setShowGrayLinks(!showGrayLinks)}>
-          {showGrayLinks ? 'Hide Gray Links' : 'Show Gray Links'}
-        </Button>
-        <Button onClick={() => setShowGreenLinks(!showGreenLinks)}>
-          {showGreenLinks ? 'Hide Green Links' : 'Show Green Links'}
-        </Button>
 
-        <div className="theme-toggle">
-          <Typography variant="body1">Dark Theme:</Typography>
-          <Switch checked={isDarkTheme} onChange={handleThemeChange} />
-          {isDarkTheme ? <ModeNightIcon /> : <WbSunnyIcon />}
+      <Drawer open={open} onClose={toggleDrawer(false)} anchor='right' color='secondary'>
+        <div className="settings-toggle">
+          <div style={{display: 'inline-flex'}}>
+            <SettingsIcon />
+            <Typography variant="h6" sx={{ml: '6vh'}}>Settings</Typography>
+          </div>
+          <div className="setting-row">
+            <Typography variant="body1">Show Gray Links</Typography>
+            <Switch
+              checked={showGrayLinks}
+              onChange={() => setShowGrayLinks((prev) => !prev)}
+              color="primary"
+            />
+          </div>
+          <div className="setting-row">
+            <Typography variant="body1">Show Green Links</Typography>
+            <Switch
+              checked={showGreenLinks}
+              onChange={() => setShowGreenLinks((prev) => !prev)}
+              color="primary"
+            />
+          </div>
+          <div className="setting-row">
+            <Typography variant="body1">Theme</Typography>
+            {!isDarkTheme ? <ModeNightIcon /> : <WbSunnyIcon />}
+            <Switch
+              checked={isDarkTheme}
+              onChange={handleThemeChange}
+              color="primary"
+            />
+          </div>
         </div>
       </Drawer>
     </div>

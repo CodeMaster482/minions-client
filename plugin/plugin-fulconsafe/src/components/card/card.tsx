@@ -47,6 +47,7 @@ type FileGeneralInfo = {
 
 type ScanResult = {
   Zone: string;
+  FileName?: string;
   IpGeneralInfo?: IpGeneralInfo;
   DomainGeneralInfo?: DomainGeneralInfo;
   UrlDomainWhoIs?: UrlDomainWhoIs;
@@ -104,14 +105,27 @@ const SingleInfoCard = React.forwardRef<HTMLDivElement, { scanResult: ScanResult
       return { text: 'Неизвестно', color: 'grey.500' };
     };
 
+    const getTitleText = () => {
+      if (scanResult.UrlGeneralInfo?.Url) return '';
+      if (scanResult.DomainGeneralInfo?.Domain) return scanResult.DomainGeneralInfo.Domain;
+      if (scanResult.IpGeneralInfo?.Ip) return scanResult.IpGeneralInfo.Ip;
+      if (scanResult.FileGeneralInfo?.FileStatus) return scanResult.FileName;
+      return 'Результат сканирования'; // Default fallback text
+    };
+
     const safetyStatus = getSafetyStatus(scanResult.Zone);
 
     return (
       <Card variant="outlined" {...props} ref={ref} sx={{ margin: '1vh', borderColor: safetyStatus.color }}>
         <CardContent sx={{ display: 'contents' }}>
-          <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14, margin: '1vh' }}>
-            {scanResult.UrlGeneralInfo?.Url || scanResult.FileGeneralInfo?.FileStatus || 'Результат сканирования'}
-          </Typography>
+          <div style={{display: 'inline-flex'}}>
+            <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14, margin: '1vh' }}>
+              {scanResult.UrlGeneralInfo?.Url || scanResult.FileGeneralInfo?.FileStatus || 'Результат сканирования'}
+            </Typography>
+            <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14, margin: '1vh' }}>
+              {getTitleText()}
+            </Typography>
+          </div>
           <Typography variant="h5" component="div" sx={{ margin: '1vh', color: safetyStatus.color }}>
             {safetyStatus.text}
           </Typography>

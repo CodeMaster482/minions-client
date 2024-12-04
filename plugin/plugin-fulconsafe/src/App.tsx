@@ -20,7 +20,7 @@ const App: React.FC<AppProps> = ({ toggleTheme }) => {
       <AuthProvider>
         <div className="App">
           <Routes>
-            <Route path='/' element={ <MainPage/> }/>
+            <Route path='/' element={ <MainPage toggleTheme={toggleTheme}/> }/>
             <Route path='/settings' element={ <SettingsPage toggleTheme={toggleTheme} /> }/>
 
             {/* Protected Route for /profile */}

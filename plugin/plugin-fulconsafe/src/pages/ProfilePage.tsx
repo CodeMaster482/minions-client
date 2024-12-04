@@ -179,7 +179,7 @@ function ProfilePage() {
                 tooltip: {
                   enabled: true,
                   callbacks: {
-                    label: (context) => {
+                    label: (context : any) => {
                       const label = filteredData[context.dataIndex].request;
                       const count = filteredData[context.dataIndex].access_count;
                       return `${label}: ${count}`;
