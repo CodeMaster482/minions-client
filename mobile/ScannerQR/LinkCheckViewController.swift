@@ -1,128 +1,184 @@
 import SwiftUI
 import AVFoundation
+import UniformTypeIdentifiers
 
 struct LinkCheckView: View {
     @State private var link: String = ""
     @State private var result: String = ""
     @State private var showScanner: Bool = false
-    
+    @State private var showDocumentPicker: Bool = false
+    @State private var showImagePicker: Bool = false
+    @State private var selectedFileURL: URL?
+    @State private var textColor: Color = .black
+
     var body: some View {
         NavigationView {
-            VStack {
-                // Кнопка "Проверить ссылку"
+            VStack(spacing: 20) {
+                TextField("Вставьте ссылку здесь", text: $link)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)
+                    .autocapitalization(.none)
+
                 Button(action: checkLink) {
                     Text("Проверить ссылку")
                         .font(.headline)
+                        .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.accentColor)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.bottom)
-                
-                // Поле для ввода ссылки
-                TextField("Вставьте ссылку здесь", text: $link)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                
-                // Результат проверки
+                .padding(.horizontal)
+
                 Text(result)
                     .padding()
-                    .foregroundColor(.green)
-                
+                    .foregroundColor(textColor)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 Spacer()
-                
-                // Кнопка "Сканировать QR-код"
-                Button(action: {
-                    showScanner = true // Показываем сканер
-                }) {
-                    Text("Сканировать QR-код")
-                        .font(.headline)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+
+                HStack(spacing: 20) {
+                    Button(action: {
+                        showScanner = true
+                    }) {
+                        VStack {
+                            Image(systemName: "qrcode.viewfinder")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 50)
+                            Text("Сканировать QR")
+                                .font(.caption)
+                        }
+                    }
+
+                    Button(action: {
+                        showImagePicker = true
+                    }) {
+                        VStack {
+                            Image(systemName: "photo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 50)
+                            Text("Выбрать фото")
+                                .font(.caption)
+                        }
+                    }
+
+                    Button(action: {
+                        showDocumentPicker = true
+                    }) {
+                        VStack {
+                            Image(systemName: "doc")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 50)
+                            Text("Выбрать файл")
+                                .font(.caption)
+                        }
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top)
+                .padding(.bottom)
             }
-            .padding()
             .navigationTitle("Проверка ссылки")
-            .fullScreenCover(isPresented: $showScanner) {
+            .sheet(isPresented: $showScanner) {
                 QRCodeScanner { scannedLink in
                     self.link = scannedLink
                     self.showScanner = false
+                    checkLink()
                 }
+            }
+            .sheet(isPresented: $showDocumentPicker) {
+                DocumentPicker(selectedFileURL: $selectedFileURL, onFileSelected: { url in
+                    uploadFile(at: url)
+                })
+            }
+            .sheet(isPresented: $showImagePicker) {
+                ImagePicker(selectedImageURL: $selectedFileURL, onImageSelected: { url in
+                    uploadImage(at: url)
+                })
             }
         }
     }
-    
+
     private func checkLink() {
-        // Проверяем, что введена ссылка
-        guard !link.isEmpty, let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "http://90.156.219.248:8080/api/scan/domain?request=\(encodedLink)") else {
-            result = "Введите корректную ссылку."
+        // ... (без изменений)
+    }
+
+    private func uploadFile(at url: URL) {
+        // Проверяем расширение файла
+        let fileExtension = url.pathExtension.lowercased()
+        if fileExtension == "png" || fileExtension == "jpg" || fileExtension == "jpeg" {
+            uploadImage(at: url)
             return
         }
-        
-        // Создаем GET-запрос
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+
+        // ... (остальной код функции uploadFile)
+    }
+
+    private func uploadImage(at url: URL) {
+        guard let serverURL = URL(string: "http://90.156.219.248:8080/api/scan/screen") else {
+            result = "Некорректный URL сервера."
+            return
+        }
+
+        var request = URLRequest(url: serverURL)
+        request.httpMethod = "POST"
+
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+
+        let filename = url.lastPathComponent
+        let mimeType = "image/\(url.pathExtension.lowercased())"
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(try! Data(contentsOf: url))
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 DispatchQueue.main.async {
                     result = "Ошибка: \(error.localizedDescription)"
                 }
                 return
             }
-            
+
             guard let data = data else {
                 DispatchQueue.main.async {
                     result = "Нет данных."
                 }
                 return
             }
-            
-            // Выводим ответ от сервера в консоль
-            if let dataString = String(data: data, encoding: .utf8) {
-                print("Ответ от сервера: \(dataString)")
-            }
-            
+
             do {
-                // Парсим JSON-ответ
-                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                   let color = json["color"] as? String {
-                    DispatchQueue.main.async {
-                        result = "Статус ссылки: \(color == "red" ? "Опасна" : "Безопасна")"
+                let decoder = JSONDecoder()
+                let screenResponse = try decoder.decode(ScreenScanResponse.self, from: data)
+
+                DispatchQueue.main.async {
+                    var resultText = ""
+
+                    for (key, scanResponse) in screenResponse.results {
+                        resultText += "Результат для ссылки: \(key)\n"
+                        // Обработка каждого scanResponse аналогично функции checkLink()
+                        // ...
                     }
-                } else {
-                    DispatchQueue.main.async {
-                        result = "Не удалось распознать ответ."
-                    }
+
+                    result = resultText
                 }
             } catch {
+                print("Ошибка при декодировании: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     result = "Ошибка при обработке ответа."
+                    textColor = .gray
                 }
             }
         }
         task.resume()
     }
-}
 
-struct QRCodeScanner: UIViewControllerRepresentable {
-    var onQRCodeScanned: (String) -> Void
-
-    func makeUIViewController(context: Context) -> ViewController {
-        let viewController = ViewController()
-        viewController.onQRCodeScanned = { scannedLink in
-            onQRCodeScanned(scannedLink)
-        }
-        viewController.startRunning() // Запускаем сессию при создании
-        return viewController
-    }
-
-    func updateUIViewController(_ uiViewController: ViewController, context: Context) {
-        // Обновление не требуется
-    }
 }

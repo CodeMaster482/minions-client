@@ -2,28 +2,23 @@ import SwiftUI
 import AVFoundation
 
 struct ContentView: View {
-    @State private var animate = false
-    @State private var isLoading = true // состояние для показа экрана загрузки
-    @State private var cameraAccessGranted = false // состояние для доступа к камере
+    @State private var isLoading = true
+    @State private var showLinkCheckView = false
 
     var body: some View {
         ZStack {
             if isLoading {
-                LoadingView(animate: $animate)
+                LoadingView()
                     .onAppear {
-                        requestCameraAccess() // Запрос доступа к камере
-                        withAnimation(.easeInOut(duration: 1)) {
-                            animate.toggle()
-                        }
+                        requestCameraAccess()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            print("Переход на основной экран")
                             withAnimation {
                                 isLoading = false
+                                showLinkCheckView = true
                             }
                         }
                     }
-            } else {
-                // Основной экран
+            } else if showLinkCheckView {
                 LinkCheckView()
             }
         }
@@ -32,36 +27,28 @@ struct ContentView: View {
 
     private func requestCameraAccess() {
         AVCaptureDevice.requestAccess(for: .video) { granted in
-            DispatchQueue.main.async {
-                cameraAccessGranted = granted
-                if granted {
-                    print("Access camera granted")
-                } else {
-                    print("Access camera denied")
-                }
+            if granted {
+                print("Access to camera granted")
+            } else {
+                print("Access to camera denied")
             }
         }
     }
 }
 
 struct LoadingView: View {
-    @Binding var animate: Bool
-
     var body: some View {
-        ZStack {
-            Image("LaunchImage")
+        VStack {
+            Spacer()
+            Image(systemName: "shield.lefthalf.fill")
                 .resizable()
                 .scaledToFit()
-                .scaleEffect(animate ? 4 : 1)
-                .opacity(animate ? 0 : 1)
-
-            VStack {
-                Spacer()
-                Text("Загрузка...")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 20)
-            }
+                .frame(width: 100, height: 100)
+                .foregroundColor(.blue)
+            Text("Загрузка...")
+                .font(.headline)
+                .padding()
+            Spacer()
         }
     }
 }
