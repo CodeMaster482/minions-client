@@ -5,7 +5,13 @@
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": [
     "http://localhost/*",
-    "http://90.156.219.248:8080/*"
+    "http://45.95.235.123:8080/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["warning.html"],
+      "matches": ["<all_urls>"]
+    }
   ],
   "background": {
     "service_worker": "background.js"

@@ -148,7 +148,7 @@ function attachProccesLink() {
             inputError.style.display = 'none';
         }
 
-        fetch(`http://90.156.219.248:8080/api/scan/uri?request=${encodeURIComponent(url)}`)
+        fetch(`http://45.95.235.123:8080/api/scan/uri?request=${encodeURIComponent(url)}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Ошибка: статус ${response.status}`);
@@ -246,7 +246,7 @@ function handleFileUpload(file) {
     formData.append('file', file);
 
     // Отправляем запрос на сервер
-    fetch(`http://90.156.219.248:8080/api/scan/file`, {
+    fetch(`http://45.95.235.123:8080/api/scan/file`, {
         method: 'POST',
         body: formData
     })

@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // Function to fetch color for a domain from the external API
         async function fetchColor(domain) {
-            const queryUrl = `http://90.156.219.248:8080/api/scan/uri?request=${encodeURIComponent(domain)}`;
+            const queryUrl = `http://45.95.235.123:8080/api/scan/uri?request=${encodeURIComponent(domain)}`;
             try {
                 const response = await fetch(queryUrl, {
                     method: "GET",
@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                 if (!response.ok) {
                     console.error(`Error checking domain ${domain}: ${response.statusText}`);
-                    sendResponse({ color: 'gray' });
+                    sendResponse({ color: 'green' });
                     return;
                 }
 
@@ -52,20 +52,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     case "Green":
                         color = 'green';
                         break;
-                    case "Gray":
                     default:
-                        color = 'gray';
+                        color = 'green';
                         break;
                 }
 
                 // Cache the result
-                cachedLinks.set(domain, color);
-                saveToChromeStorageAPI(cachedLinks);
+                //cachedLinks.set(domain, color);
+                //saveToChromeStorageAPI(cachedLinks);
 
-                sendResponse({ color: data.Zone });
+                sendResponse({ color: color });
             } catch (error) {
                 console.error(`Error processing domain ${domain}:`, error);
-                sendResponse({ color: 'Gray' });
+                sendResponse({ color: 'Green' });
             }
         }
 

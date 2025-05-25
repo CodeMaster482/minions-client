@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // Function to fetch color for a domain from the external API
         async function fetchColor(domain) {
-            const queryUrl = `http://90.156.219.248:8080/api/scan/uri?request=${encodeURIComponent(domain)}`;
+            const queryUrl = `http://45.95.235.123:8080/api/scan/uri?request=${encodeURIComponent(domain)}`;
             try {
                 const response = await fetch(queryUrl, {
                     method: "GET",

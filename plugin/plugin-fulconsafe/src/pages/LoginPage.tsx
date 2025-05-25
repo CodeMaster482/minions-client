@@ -93,8 +93,8 @@ function AuthPage() {
         };
 
         const url = isLogin
-            ? 'http://90.156.219.248:8080/api/auth/login'  // Login endpoint
-            : 'http://90.156.219.248:8080/api/auth/register';  // Registration endpoint
+            ? 'http://45.95.235.123:8080/api/auth/login'  // Login endpoint
+            : 'http://45.95.235.123:8080/api/auth/register';  // Registration endpoint
 
         try {
             const response = await fetch(url, {

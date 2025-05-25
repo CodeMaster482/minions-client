@@ -24,8 +24,8 @@ import InfoCard from '../../components/card/card';
 import './MainPage.css';
 
 const MAX_URL_LENGTH = 256;
-const API_URL_SCAN = 'http://90.156.219.248:8080/api/scan';
-const API_URL_SCAN_FILE = 'http://90.156.219.248:8080/api/scan/file';
+const API_URL_SCAN = 'http://45.95.235.123:8080/api/scan';
+const API_URL_SCAN_FILE = 'http://45.95.235.123:8080/api/scan/file';
 const URL_PATTERN = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}([\/\w \.-]*)*\/?$/;
 const IP_PATTERN = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/;
 const DOMAIN_PATTERN = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -251,7 +251,7 @@ const MainPage: React.FC<MainPageProps> = ({ toggleTheme }) => {
             <SettingsIcon />
             <Typography variant="h6" sx={{ml: '6vh'}}>Settings</Typography>
           </div>
-          <div className="setting-row">
+          {/* <div className="setting-row">
             <Typography variant="body1">Show Gray Links</Typography>
             <Switch
               checked={showGrayLinks}
@@ -266,7 +266,7 @@ const MainPage: React.FC<MainPageProps> = ({ toggleTheme }) => {
               onChange={() => setShowGreenLinks((prev) => !prev)}
               color="primary"
             />
-          </div>
+          </div> */}
           <div className="setting-row">
             <Typography variant="body1">Theme</Typography>
             {!isDarkTheme ? <ModeNightIcon /> : <WbSunnyIcon />}

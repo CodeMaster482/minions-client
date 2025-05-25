@@ -10,8 +10,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 // URLs for API endpoints
-const API_BASE_URL = 'http://90.156.219.248:8080/api/v2/stat';
-const LOGOUT_API_URL = 'http://90.156.219.248:8080/api/auth/logout';
+const API_BASE_URL = 'http://45.95.235.123:8080/api/v2/stat';
+const LOGOUT_API_URL = 'http://45.95.235.123:8080/api/auth/logout';
 
 function ProfilePage() {
   const { isAuthenticated, logout } = useAuth(); // Destructure logout from useAuth

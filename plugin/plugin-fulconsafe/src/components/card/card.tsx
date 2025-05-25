@@ -72,7 +72,10 @@ const InfoCard = React.forwardRef<HTMLDivElement, CustomCardProps>(function Info
       scanResultsArray = [scanResult as ScanResult];
     } else {
       // scanResult содержит ключи вроде 'additionalProp1'
-      scanResultsArray = Object.values(scanResult);
+      scanResultsArray = Object.values(scanResult).filter(
+        (item): item is ScanResult =>
+          typeof item === 'object' && item !== null && ('Zone' in item || 'DomainGeneralInfo' in item || 'UrlGeneralInfo' in item || 'IpGeneralInfo' in item || 'FileGeneralInfo' in item)
+      );
     }
   }
 
@@ -102,7 +105,7 @@ const SingleInfoCard = React.forwardRef<HTMLDivElement, { scanResult: ScanResult
     const getSafetyStatus = (zone: string) => {
       if (zone === 'Red') return { text: 'Опасно', color: 'error.main' };
       if (zone === 'Green') return { text: 'Безопасно', color: 'success.main' };
-      return { text: 'Неизвестно', color: 'grey.500' };
+       return { text: 'Неизвестно', color: 'grey.500' };
     };
 
     const getTitleText = () => {

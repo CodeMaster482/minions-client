@@ -1,10 +1,8 @@
-const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/; // Optimized to use RegExp constructor
+const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/;
 const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'];
 
-// Cache current page domain for reuse
 const currentDomain = getCurrentPageDomain();
 
-// Throttle function to limit executions of a function
 function throttle(fn, limit) {
     let lastCall = 0;
     return function (...args) {
@@ -16,12 +14,10 @@ function throttle(fn, limit) {
     };
 }
 
-// Get current page's domain
 function getCurrentPageDomain() {
     return window.location.hostname.replace(/^www\./, '');
 }
 
-// Extract domain from URL
 function extractDomain(url) {
     try {
         const urlObj = new URL(url);
@@ -32,127 +28,129 @@ function extractDomain(url) {
     }
 }
 
-// Check if the link is an image file
 function isImageLink(url) {
     return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
 }
 
-// Extract redirect URL from query parameter (if exists)
 function extractRedirectUrl(href) {
     const urlParams = new URLSearchParams(href);
     const redirectUrl = urlParams.get('to');
     return redirectUrl ? decodeURIComponent(redirectUrl) : null;
 }
 
-// Apply styles to the link's parent container based on the color
+// Добавляем иконку рядом с ссылкой
 function applyLinkContainerStyle(link, color) {
-    const container = link.parentElement;
+    const existingIcon = link.querySelector('.scan-icon');
+    if (existingIcon) existingIcon.remove();
 
-    const styles = {
-        Red: {
-            border: '2px solid',
-            borderColor: '#f44336',
-            backgroundColor: '#ffebee',
-            message: `Very dangerous link ${extractDomain(link.href)}`
-        },
-        Green: {
-            border: '2px solid',
-            borderColor: '#4caf50',
-            backgroundColor: '#c8e6c9',
-            message: `Safe link ${extractDomain(link.href)}`
-        },
-        Gray: {
-            border: '2px solid',
-            borderColor: '#9e9e9e',
-            backgroundColor: '#f5f5f5',
-            message: `Not dangerous link ${extractDomain(link.href)}`
-        }
-    };
+    const icon = document.createElement('span');
+    icon.classList.add('scan-icon');
 
-    const selectedStyle = styles[color] || styles.Gray;
-    Object.assign(container.style, {
-        border: selectedStyle.border,
-        borderColor: selectedStyle.borderColor,
-        backgroundColor: selectedStyle.backgroundColor,
-        // position: 'relative',
-        borderRadius: '5px'
+    // Выбор иконки и цвета
+    let emoji = '⚪'; // Default: gray dot
+    let tooltip = `Unknown link: ${extractDomain(link.href)}`;
+    let emojiColor = '#9e9e9e';
+
+    if (color === 'Green') {
+        emoji = '✅';
+        emojiColor = '#4caf50';
+        tooltip = `Safe link: ${extractDomain(link.href)}`;
+    } else if (color === 'Red') {
+        emoji = '⚠️';
+        emojiColor = '#f44336';
+        tooltip = `Very dangerous link: ${extractDomain(link.href)}`;
+
+        const warningUrl = chrome.runtime.getURL("warning.html") + "?url=" + encodeURIComponent(link.href);
+        link.setAttribute('href', warningUrl);
+    }
+
+    icon.innerText = emoji;
+    Object.assign(icon.style, {
+        fontSize: '14px',
+        marginLeft: '6px',
+        color: emojiColor,
+        verticalAlign: 'middle',
+        userSelect: 'none'
     });
 
-    // Check if the tooltip already exists
-    let details = container.querySelector('.link-tooltip');
-    if (!details) {
-        // Create and show link details on hover if tooltip doesn't exist
-        details = document.createElement('div');
-        details.classList.add('link-tooltip');  // Add a class to the tooltip for easier management
-        details.innerText = selectedStyle.message;
-        
-        // Apply styles to the tooltip, match the border color, and ensure it appears above other elements
-        Object.assign(details.style, {
-            position: 'absolute',
-            top: '-3vh', // Position the tooltip above the container
-            left: '0',
-            backgroundColor: selectedStyle.borderColor, // Match border color for tooltip
-            color: 'white',
-            borderRadius: '5px',
-            padding: '5px',
-            zIndex: '1000', // Ensure it's above all other elements
-            visibility: 'hidden',
-            opacity: '0',
-            transition: 'visibility 0s, opacity 0.3s ease'
-        });
+    icon.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    
+        try {
+            const url = new URL(link.href);
+            const cleanUrl = `${url.origin}${url.pathname}`; // Без query и hash
+    
+            navigator.clipboard.writeText(cleanUrl).then(() => {
+                icon.title = `Скопировано: ${cleanUrl}`;
+                icon.innerText = '📋';
+    
+                setTimeout(() => {
+                    icon.innerText = emoji;
+                    icon.title = tooltip;
+                }, 1000);
+            }).catch(err => {
+                console.error('Не удалось скопировать ссылку:', err);
+            });
+        } catch (e) {
+            console.error('Некорректный URL:', link.href);
+        }
+    });
 
-        container.appendChild(details);
-
-        // Show tooltip on hover
-        link.addEventListener('mouseenter', () => {
-            details.style.visibility = 'visible';
-            details.style.opacity = '1';
-        });
-
-        // Hide tooltip when not hovered
-        link.addEventListener('mouseleave', () => {
-            details.style.visibility = 'hidden';
-            details.style.opacity = '0';
-        });
-    }
+    link.appendChild(icon);
+    link.title = tooltip;
 }
 
-// Process external links and apply styles
 function processExternalLinks() {
-    // Select all anchor tags whose href starts with 'http'
     const links = document.querySelectorAll('a[href^="http"]');
 
     links.forEach(link => {
-        const href = link.getAttribute('href');
+        // Пропуск уже обработанных ссылок
+        if (link.dataset.scanStatus === "done") return;
 
-        // Skip image links
+        const href = link.getAttribute('href');
         if (isImageLink(href)) return;
 
-        // Check for redirect URLs (encoded in query parameters)
         const decodedUrl = extractRedirectUrl(href);
         const urlToCheck = decodedUrl || href;
+        const linkDomain = extractDomain(urlToCheck);
 
-        // Check if the link is external
-        if (urlToCheck && urlToCheck !== currentDomain) {
+        if (urlToCheck && linkDomain !== currentDomain) {
+            // Проверка кэша
+            // if (cachedLinks.has(linkDomain)) {
+            //     //const cachedColor = cachedLinks.get(linkDomain);
+            //     applyLinkContainerStyle(link, capitalize(cachedColor));
+            //     link.dataset.scanStatus = "done";
+            //     return;
+            // }
+
             chrome.runtime.sendMessage({
                 action: "checkLink",
                 href: href,
-                linkDomain: urlToCheck
+                linkDomain: linkDomain
             }, response => {
                 if (response && response.color) {
-                    applyLinkContainerStyle(link, response.color);
+                    const color = capitalize(response.color);
+                    applyLinkContainerStyle(link, color);
+
+                    // Кэширование
+                    //cachedLinks.set(linkDomain, color);
+                    //saveToChromeStorageAPI(cachedLinks);
+
+                    link.dataset.scanStatus = "done";
                 }
             });
         }
     });
 }
 
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 
-// Create throttled version of processExternalLinks
 const throttledProcessExternalLinks = throttle(processExternalLinks, 100);
 
-// Observer to detect DOM changes and re-process links
-const observer = new MutationObserver((mutations) => {
+const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
         if (mutation.type === 'childList') {
             throttledProcessExternalLinks();
@@ -165,5 +163,4 @@ observer.observe(document.body, {
     subtree: true
 });
 
-// Initial processing of external links
 throttledProcessExternalLinks();

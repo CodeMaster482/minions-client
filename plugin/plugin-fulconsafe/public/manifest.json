@@ -2,10 +2,16 @@
   "manifest_version": 3,
   "name": "Falcon Safe",
   "version": "1.0",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": [
     "http://localhost/*",
-    "http://90.156.219.248:8080/*"
+    "http://45.95.235.123:8080/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["warning.html"],
+      "matches": ["<all_urls>"]
+    }
   ],
   "background": {
     "service_worker": "background.js"
